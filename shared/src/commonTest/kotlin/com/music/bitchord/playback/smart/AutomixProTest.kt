@@ -340,6 +340,66 @@ class AutomixProTest {
         )
     }
 
+    // ---- Zehren cue rules ------------------------------------------------------------
+
+    private fun trackWithCues(
+        energy: (Double) -> Double,
+        vararg cueTimes: Double,
+        duration: Double = 120.0,
+    ): TrackAnalysis {
+        val bpm = 120.0
+        val beat = 0.5
+        val downbeats = generateSequence(0.5) { it + 4 * beat }.takeWhile { it < duration - 1 }.toList()
+        val samples = (0 until (duration * 2).toInt()).map { i ->
+            val t = i / 2.0
+            EnergySample(t, energy(t))
+        }
+        return TrackAnalysis(
+            status = TrackAnalysis.STATUS_READY,
+            trackId = "cue",
+            duration = duration,
+            bpm = bpm,
+            beatInterval = beat,
+            beatConfidence = 0.9,
+            downbeats = downbeats,
+            phraseBoundaries = downbeats.filterIndexed { index, _ -> index % 8 == 0 },
+            firstBeat = 0.5,
+            key = "C major",
+            keyConfidence = 0.9,
+            audibleStartTime = 0.5,
+            contentEndTime = duration - 2,
+            mixInTime = downbeats[4],
+            mixInCandidates = cueTimes.map { MixCandidate(it, 0.5, "intro_drop") },
+            energyCurve = samples,
+        )
+    }
+
+    @Test
+    fun phraseEntryWithNoveltyWins() {
+        // Candidate A: phrase boundary + downbeat, track arrives (0.2 -> 1.0),
+        // strong section follows. Candidate B: plain downbeat, flat energy.
+        // Same base score and type: the musical rules must decide.
+        val analysis = trackWithCues(
+            energy = { t -> if (t < 16.5) 0.2 else 1.0 },
+            16.5, 10.5,
+        )
+        val ranked = rankMixInCandidates(analysis)
+        assertEquals(16.5, ranked.first().time, "phrase entry with novelty should win")
+    }
+
+    @Test
+    fun weakSectionAfterCueLoses() {
+        // Candidate C: phrase boundary, but the section after it collapses
+        // (1.0 -> 0.1). Candidate E: plain downbeat with a sustaining section.
+        // Salience must outweigh the phrase-boundary bonus.
+        val analysis = trackWithCues(
+            energy = { t -> if (t in 32.5..48.0) 0.1 else 1.0 },
+            32.5, 20.5,
+        )
+        val ranked = rankMixInCandidates(analysis)
+        assertEquals(20.5, ranked.first().time, "sustaining section should beat a weak phrase entry")
+    }
+
     // ---- Verdict -----------------------------------------------------------------
 
     @Test

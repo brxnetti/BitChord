@@ -1053,7 +1053,7 @@ private fun wholeBars(seconds: Double, beatSeconds: Double, maximum: Double): Do
 }
 
 /** Mean energy over [from, to] seconds from the curve; 0 when the curve is empty. */
-private fun meanEnergy(curve: List<EnergySample>, from: Double, to: Double): Double {
+internal fun meanEnergy(curve: List<EnergySample>, from: Double, to: Double): Double {
     var sum = 0.0
     var count = 0
     for (sample in curve) {

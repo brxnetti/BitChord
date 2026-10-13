@@ -322,6 +322,14 @@ fun audibleSecondsBetween(analysis: TrackAnalysis, start: Double, end: Double): 
  * score, the candidate type, downbeat alignment, whether there is any intro
  * before the point to bed under the outgoing track, and how vocal that intro
  * is all move a candidate up or down.
+ *
+ * Automix Pro adds the professional cue rules of Zehren et al. ("Automatic
+ * Detection of Cue Points for DJ Mixing", ISMIR 2020, validated against
+ * expert-annotated DJ data): a great entry has high novelty (the track
+ * arrives there), sits on the downbeat opening a phrase period, and is
+ * followed by a section that sustains itself. Where the incoming track
+ * enters matters as much as how it is blended: an entry into a weak or
+ * sparse section sounds broken even with perfect beatmatching.
  */
 fun rankMixInCandidates(analysis: TrackAnalysis): List<RankedMixCandidate> {
     val candidates = analysis.mixInCandidates.filter { it.time.isFinite() && it.time >= 0 }
@@ -330,9 +338,17 @@ fun rankMixInCandidates(analysis: TrackAnalysis): List<RankedMixCandidate> {
         .takeIf { it > 0 }
         ?: if (analysis.bpm.orZero() > 0) 60 / analysis.bpm else 0.5
     val audibleStart = audibleStartOf(analysis)
+    val curve = analysis.energyCurve
+    val peakEnergy = curve.maxOfOrNull { it.energy }.orZero()
     return candidates.map { candidate ->
         var rankScore = candidate.score.orZero() + (MIX_IN_TYPE_WEIGHT[candidate.type] ?: 0.0)
         if (nearestValue(analysis.downbeats, candidate.time, beatSeconds / 2) != null) rankScore += 0.1
+        // Zehren rule 2: the downbeat that opens a phrase period. Phrase
+        // boundaries are the 4/8-bar grid the analyzer heard; entering on
+        // one lands the incoming track on a musical paragraph break.
+        if (nearestValue(analysis.phraseBoundaries, candidate.time, beatSeconds / 2) != null) {
+            rankScore += 0.15
+        }
         // A cold open: nothing before the point to play underneath the outgoing track, so entering
         // here means starting the blend on the arrangement.
         if (candidate.time - audibleStart < beatSeconds * 4) rankScore -= 0.2
@@ -344,6 +360,19 @@ fun rankMixInCandidates(analysis: TrackAnalysis): List<RankedMixCandidate> {
             candidate.time,
         )
         if (vocal != null) rankScore += (0.5 - vocal) * 0.4
+        if (peakEnergy > 1e-9) {
+            // Zehren rule 1 (novelty): the track "arrives" at the candidate —
+            // energy steps up into the entry. Normalized by the track peak so
+            // it is scale-free.
+            val before = meanEnergy(curve, candidate.time - beatSeconds * 4, candidate.time)
+            val after = meanEnergy(curve, candidate.time, candidate.time + beatSeconds * 4)
+            rankScore += ((after - before) / peakEnergy).coerceIn(-1.0, 1.0) * 0.2
+            // Zehren rule 3 (salience): the 4 bars after the entry must hold
+            // their own — mean energy there above 0.4x the track peak.
+            // Below that the section sounds weak no matter how clean the mix.
+            val salience = meanEnergy(curve, candidate.time, candidate.time + beatSeconds * 16) / peakEnergy
+            rankScore += (salience - 0.4) * 0.5
+        }
         RankedMixCandidate(
             time = candidate.time,
             score = candidate.score.orZero(),
