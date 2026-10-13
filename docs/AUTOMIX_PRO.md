@@ -128,9 +128,10 @@ Rama: `automix-pro` (sobre `main` @ `fe95bb6`). Fecha: 2026-10-13.
   el entorno solo deja ~0.5 GB libres y el daemon no sobrevive). En su
   lugar, el módulo `shared` (donde vive toda la lógica nueva de Automix
   Pro) **sí compiló limpio** con kotlinc 2.3.20 directo y sus pruebas
-  corrieron: 20 nuevas (`AutomixProTest`: migración, topes por estilo,
+  corrieron: 22 nuevas (`AutomixProTest`: migración, topes por estilo,
   anti-repetición, Camelot, **selección armónica de técnica, solape matcheado
-  por energía**, veredicto) + 11 existentes
+  por energía, reglas de cue profesionales (Zehren)**, veredicto) + 11
+  existentes
   (`AdvancedAutomixPlannerTest`), todas en verde. El APK se compila en
   GitHub Actions con `.github/workflows/automix-pro.yml` (corre
   `:shared:jvmTest`, `assembleProdRelease`, verifica con `aapt2`/`zipalign`/
@@ -194,6 +195,12 @@ TrackAnalyzer ──► TrackAnalysis ──► assessTransitionTier ──► N
   más silenciosa que la cola del saliente (energía media < 0.5×), el solape
   se topa a 6 s en vez de arrastrar un outro fuerte sobre un intro
   silencioso.
+- **Reglas de cue profesionales** (Zehren et al., "Automatic Detection of
+  Cue Points for DJ Mixing", ISMIR 2020, validadas contra datos anotados por
+  expertos): `rankMixInCandidates` puntúa los puntos de entrada con novedad
+  (el tema "llega" ahí: la energía sube), downbeat que abre período de frase
+  y saliencia (los 4 compases siguientes se sostienen solos, energía media >
+  0.4× el pico). Dónde entra la pista importa tanto como cómo se mezcla.
 
 ## 4. Parámetros (un solo lugar)
 
@@ -217,11 +224,12 @@ tope del estilo antes de tocar los umbrales de confianza (ya calibrados).
 
 ## 5. Pruebas
 
-- Unitarias (JVM): `AutomixProTest` (20 pruebas: migración del modo legado,
+- Unitarias (JVM): `AutomixProTest` (22 pruebas: migración del modo legado,
   topes por estilo, anti-repetición, Camelot, selección armónica de técnica,
-  solape matcheado por energía, formato del veredicto) y
+  solape matcheado por energía, reglas de cue profesionales, formato del
+  veredicto) y
   `AdvancedAutomixPlannerTest` (11 pruebas existentes, sin regresiones).
-  Compiladas y corridas con kotlinc 2.3.20 directo el 2026-10-13: 31/31 en
+  Compiladas y corridas con kotlinc 2.3.20 directo el 2026-10-13: 33/33 en
   verde. (El runner de Gradle no funciona en este entorno; en CI corren vía
   `./gradlew :shared:jvmTest`.)
 - Compilación: `./gradlew assembleProdRelease` en cada hito — en GitHub
