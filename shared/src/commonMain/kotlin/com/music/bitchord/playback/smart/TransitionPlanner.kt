@@ -1052,6 +1052,19 @@ private fun wholeBars(seconds: Double, beatSeconds: Double, maximum: Double): Do
     return if (bars >= 1) bars * bar else seconds
 }
 
+/** Mean energy over [from, to] seconds from the curve; 0 when the curve is empty. */
+private fun meanEnergy(curve: List<EnergySample>, from: Double, to: Double): Double {
+    var sum = 0.0
+    var count = 0
+    for (sample in curve) {
+        if (sample.time >= from && sample.time <= to) {
+            sum += sample.energy
+            count++
+        }
+    }
+    return if (count > 0) sum / count else 0.0
+}
+
 /** The outgoing downbeat at or up to [tolerance] before [time], so an exit lands on the one. */
 private fun onDownbeatBefore(analysis: TrackAnalysis, time: Double, tolerance: Double): Double =
     timedValueNearOrBefore(analysis.downbeats, time, tolerance) ?: time
@@ -1426,6 +1439,23 @@ private fun mixPlan(
         traits != null && energy > 1 -> CALM_MAX_SECONDS
         else -> AUTO_TRANSITION_MAX_SECONDS
     }
+    // Automix Pro harmonic selection: the keys are already trusted (or blank).
+    // A clash must never be open-blended no matter how well the tempi match:
+    // two keys grinding against each other for 8 seconds is the opposite of
+    // a pro transition. Clash pairs get the filter ride instead, which masks
+    // the dissonance behind a closing low-pass.
+    val harmonic = harmonicRelationOf(trustedKey(analysis), trustedKey(nextAnalysis))
+    val clashMasking = harmonic == HarmonicRelation.CLASH
+    // Automix Pro energy matching: mean energy of the outgoing track's tail
+    // against the incoming track's head (both from analysis, independent of
+    // the planned cue). Blending a loud outro into a quiet intro over a long
+    // overlap sounds like the energy dying slowly; cap the blend short so the
+    // handoff lands quicker and cleaner.
+    val outroEnergy = meanEnergy(analysis.energyCurve, max(0.0, mixEnd - 8.0), mixEnd)
+    val introStart = nextAnalysis.mixInTime.takeIf { it.isFinite() && it >= 0 }
+        ?: nextAnalysis.audibleStartTime ?: 0.0
+    val introEnergy = meanEnergy(nextAnalysis.energyCurve, introStart, introStart + 8.0)
+    val energyDrop = outroEnergy > 1e-6 && introEnergy > 1e-6 && introEnergy / outroEnergy < 0.5
     val maximumOverlap = minOf(
         if (handoffBpm > 0) (maxBeats * 60) / handoffBpm else maxSeconds,
         maxSeconds,
@@ -1433,6 +1463,8 @@ private fun mixPlan(
         // bounds how long the blend may run. SUBTLE keeps blends short,
         // BALANCED is the historical behavior, DJ lets strong pairs breathe.
         style.maxOverlapSeconds,
+        // Automix Pro energy cap (see above).
+        if (energyDrop) 6.0 else Double.POSITIVE_INFINITY,
         mixEnd * 0.4,
         if (nextLength > 0) nextLength * 0.4 else maxSeconds,
     )
@@ -1552,6 +1584,10 @@ private fun mixPlan(
     }
     val resolvedFilterVariant = when {
         vocalSafeFallback -> FilterTransitionVariant.SWEEP
+        // Note: clash masking is enforced through the style (DJ_FILTER, never
+        // an open DJ_BLEND), not the variant. The closing low-pass that every
+        // DJ_FILTER ride carries already masks the dissonance, so the gesture
+        // keeps rotating for variety.
         filterVariant == FilterTransitionVariant.ECHO_RIDE && echoSeconds <= 0.0 ->
             FilterTransitionVariant.BASS_HANDOFF
         else -> filterVariant
@@ -1570,14 +1606,17 @@ private fun mixPlan(
         pickupSeconds = pickupSeconds,
         transitionBeats = transitionBeats,
         bassSwap = sameBeatBlend || hasBassContent,
-        transitionStyle = if (sameBeatBlend) TransitionStyle.DJ_BLEND else TransitionStyle.DJ_FILTER,
+        // Automix Pro harmonic selection: a key clash is never open-blended,
+        // however well the tempi match. The filter ride masks the dissonance;
+        // an open DJ_BLEND would grind the two keys against each other.
+        transitionStyle = if (sameBeatBlend && !clashMasking) TransitionStyle.DJ_BLEND else TransitionStyle.DJ_FILTER,
         // The two styles are alternatives, not a scale: a matched pair hands the
         // low end over on a beat and otherwise stays open, while an unmatched
         // pair has no shared grid to hand anything over on and instead pulls the
         // outgoing track behind a closing low-pass. Left at zero on the blend
         // branch so the renderer doesn't do both at once.
-        filterSweep = if (sameBeatBlend) 0.0 else FILTER_SWEEP,
-        filterVariant = if (sameBeatBlend) FilterTransitionVariant.SWEEP else resolvedFilterVariant,
+        filterSweep = if (sameBeatBlend && !clashMasking) 0.0 else FILTER_SWEEP,
+        filterVariant = if (sameBeatBlend && !clashMasking) FilterTransitionVariant.SWEEP else resolvedFilterVariant,
         vocalOverlap = vocalOverlap,
         beatSeconds = gridBeatSeconds,
         // Tempo is fixed while audible. Live phase-lock pulses changed

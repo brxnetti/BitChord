@@ -123,6 +123,51 @@ private fun parseCamelot(key: String): Pair<Int, Boolean>? {
 }
 
 /**
+ * The harmonic relationship between two tracks' keys, as a DJ reads it.
+ * Drives technique selection in the planner: a [CLASH] must never be
+ * open-blended, an [ENERGY_UP] is the classic lift mix.
+ */
+enum class HarmonicRelation {
+    /** Either key unknown or untrusted: stay neutral, change nothing. */
+    UNKNOWN,
+    /** Same Camelot slot, e.g. 8A→8A. */
+    SAME,
+    /** Relative major/minor, e.g. 8A→8B. */
+    RELATIVE,
+    /** +1 on the wheel, e.g. 8A→9A: the energy-boost mix. */
+    ENERGY_UP,
+    /** −1 on the wheel, e.g. 9A→8A: the energy-drop mix. */
+    ENERGY_DOWN,
+    /** +2, e.g. 8A→10A: lift. */
+    LIFT,
+    /** −2, e.g. 10A→8A: settle. */
+    SETTLE,
+    /** Anything else: blending these open would grind. */
+    CLASH,
+}
+
+/**
+ * Structured version of [camelotRelation] for the planner. Takes the keys
+ * as the analyzer wrote them ("C major", "F♯ minor"); unparseable or blank
+ * keys yield [HarmonicRelation.UNKNOWN], which is always neutral.
+ */
+fun harmonicRelationOf(keyA: String, keyB: String): HarmonicRelation {
+    val a = parseCamelot(keyA) ?: return HarmonicRelation.UNKNOWN
+    val b = parseCamelot(keyB) ?: return HarmonicRelation.UNKNOWN
+    val (numA, minorA) = a
+    val (numB, minorB) = b
+    return when {
+        a == b -> HarmonicRelation.SAME
+        numA == numB -> HarmonicRelation.RELATIVE
+        minorA == minorB && (numB - numA + 12) % 12 == 1 -> HarmonicRelation.ENERGY_UP
+        minorA == minorB && (numA - numB + 12) % 12 == 1 -> HarmonicRelation.ENERGY_DOWN
+        minorA == minorB && (numB - numA + 12) % 12 == 2 -> HarmonicRelation.LIFT
+        minorA == minorB && (numA - numB + 12) % 12 == 2 -> HarmonicRelation.SETTLE
+        else -> HarmonicRelation.CLASH
+    }
+}
+
+/**
  * One-line human summary of a [TransitionVerdict] for stats for nerds, e.g.
  * "Nivel 1 · DJ_BLEND · 8.2 s (16 beats) · +2.1 % · 8A→9A (+1, energy boost)".
  */

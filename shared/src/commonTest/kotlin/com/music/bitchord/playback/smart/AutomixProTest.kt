@@ -205,6 +205,141 @@ class AutomixProTest {
         assertEquals("", camelotRelation("", ""))
     }
 
+    // ---- Harmonic selection ------------------------------------------------------
+
+    private fun planWithKeys(keyA: String, keyB: String): TransitionPlan {
+        val a = track("a", 120.0, keyA)
+        val b = track("b", 120.0, keyB)
+        return planTransition(
+            analysis = a,
+            nextAnalysis = b,
+            currentTrack = info(a),
+            nextTrack = info(b),
+            currentTime = 10.0,
+            duration = a.duration,
+            mode = CrossfadeMode.SMART,
+            advanced = true,
+        )
+    }
+
+    @Test
+    fun keyClashNeverOpenBlends() {
+        // Same tempo, high confidence: without the clash this is DJ_BLEND.
+        // C major (8B) vs F# major (2B) is a clash: must be masked, not blended.
+        val plan = planWithKeys("C major", "F♯ major")
+        assertEquals(
+            TransitionStyle.DJ_FILTER, plan.transitionStyle,
+            "key clash must not open-blend",
+        )
+        assertTrue(
+            plan.filterSweep > 0.0,
+            "key clash must ride the closing low-pass",
+        )
+    }
+
+    @Test
+    fun compatibleKeysStillBlend() {
+        // C major (8B) -> G major (9B): energy boost, compatible -> DJ_BLEND.
+        val plan = planWithKeys("C major", "G major")
+        assertEquals(TransitionStyle.DJ_BLEND, plan.transitionStyle)
+    }
+
+    @Test
+    fun unknownKeyStaysNeutral() {
+        val a = track("a", 120.0, "")
+        val b = track("b", 120.0, "")
+        val plan = planTransition(
+            analysis = a,
+            nextAnalysis = b,
+            currentTrack = info(a),
+            nextTrack = info(b),
+            currentTime = 10.0,
+            duration = a.duration,
+            mode = CrossfadeMode.SMART,
+            advanced = true,
+        )
+        // No key information: the old behavior stands, nothing forced.
+        assertEquals(TransitionStyle.DJ_BLEND, plan.transitionStyle)
+    }
+
+    @Test
+    fun harmonicRelationStructured() {
+        assertEquals(HarmonicRelation.SAME, harmonicRelationOf("A minor", "A minor"))
+        assertEquals(HarmonicRelation.RELATIVE, harmonicRelationOf("A minor", "C major"))
+        assertEquals(HarmonicRelation.ENERGY_UP, harmonicRelationOf("A minor", "E minor"))
+        assertEquals(HarmonicRelation.ENERGY_DOWN, harmonicRelationOf("E minor", "A minor"))
+        assertEquals(HarmonicRelation.CLASH, harmonicRelationOf("C major", "F♯ major"))
+        assertEquals(HarmonicRelation.UNKNOWN, harmonicRelationOf("", "C major"))
+        assertEquals(HarmonicRelation.UNKNOWN, harmonicRelationOf("C major", "nonsense"))
+    }
+
+    // ---- Energy matching ---------------------------------------------------------
+
+    private fun trackWithEnergy(
+        id: String,
+        bpm: Double,
+        key: String,
+        energy: (Double) -> Double,
+        duration: Double = 200.0,
+    ): TrackAnalysis {
+        val beat = 60.0 / bpm
+        val downbeats = generateSequence(0.5) { it + 4 * beat }.takeWhile { it < duration - 1 }.toList()
+        val samples = (0 until (duration * 2).toInt()).map { i ->
+            val t = i / 2.0
+            EnergySample(t, energy(t))
+        }
+        return TrackAnalysis(
+            status = TrackAnalysis.STATUS_READY,
+            trackId = id,
+            duration = duration,
+            bpm = bpm,
+            beatInterval = beat,
+            beatConfidence = 0.9,
+            downbeats = downbeats,
+            phraseBoundaries = downbeats.filterIndexed { index, _ -> index % 8 == 0 },
+            firstBeat = 0.5,
+            key = key,
+            keyConfidence = 0.9,
+            audibleStartTime = 0.5,
+            contentEndTime = duration - 2,
+            mixInTime = downbeats[4],
+            energyCurve = samples,
+        )
+    }
+
+    @Test
+    fun energyDropShortensOverlap() {
+        // Clashing keys (C major -> F# major) so the phrase-switch path is
+        // skipped and both plans run through the same mixPlan branch; the
+        // only difference is the incoming track's intro energy.
+        fun planFor(introEnergy: Double): TransitionPlan {
+            val a = trackWithEnergy("a", 120.0, "C major", energy = { 1.0 }, duration = 400.0)
+            val b = trackWithEnergy("b", 120.0, "F♯ major", energy = { introEnergy }, duration = 400.0)
+            return planTransition(
+                analysis = a,
+                nextAnalysis = b,
+                currentTrack = info(a),
+                nextTrack = info(b),
+                currentTime = 10.0,
+                duration = a.duration,
+                mode = CrossfadeMode.SMART,
+                advanced = true,
+                style = AutomixStyle.DJ,
+            )
+        }
+        val matched = planFor(1.0)
+        val dropped = planFor(0.1)
+        assertTrue(
+            dropped.fadeSeconds <= 6.0 + 0.001,
+            "energy drop should cap overlap at 6s, was ${dropped.fadeSeconds}s",
+        )
+        assertTrue(
+            dropped.fadeSeconds < matched.fadeSeconds,
+            "energy drop (${dropped.fadeSeconds}s) should shorten the blend " +
+                "vs matched energy (${matched.fadeSeconds}s)",
+        )
+    }
+
     // ---- Verdict -----------------------------------------------------------------
 
     @Test
