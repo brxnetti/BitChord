@@ -197,7 +197,7 @@
     <string name="blocking">Bloquant</string>
     <string name="crossfade">Fondu enchaîné</string>
     <string name="crossfade_subtitle">Fond une piste dans la suivante</string>
-    <string name="automix">Automix [BÊTA]</string>
+    <string name="automix">Automix Pro</string>
     <string name="skip_silence">Ignorer les silences</string>
     <string name="skip_silence_subtitle">Coupe les silences de plus d\'une seconde</string>
     <string name="skip_silence_float_subtitle">Indisponible avec la sortie flottante 32 bits</string>

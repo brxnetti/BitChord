@@ -14,6 +14,10 @@ import com.music.bitchord.data.lyrics.LyricsSource
 import com.music.bitchord.data.sources.SourceKind
 import com.music.bitchord.playback.EqLayout
 import com.music.bitchord.playback.EqualizerPreset
+import com.music.bitchord.playback.smart.AutomixStyle
+import com.music.bitchord.playback.smart.TransitionMode
+import com.music.bitchord.playback.smart.TransitionVerdict
+import com.music.bitchord.playback.smart.migrateLegacyTransitionMode
 import kotlinx.coroutines.flow.MutableStateFlow
 
 
@@ -232,6 +236,25 @@ object AppSettings {
      * See [com.music.bitchord.playback.smart.TransitionPlanner].
      */
     val smartFadeEnabled = MutableStateFlow(false)
+
+    /**
+     * Automix Pro: the single transition-mode selector (Off / Crossfade /
+     * Gapless / Automix Pro). Migrated once from the legacy pair
+     * ([smartFadeEnabled] + [crossfadeSeconds]) — see [migrateTransitionMode].
+     * The legacy keys stay readable so the migration survives reinstalls of
+     * this build over an older one; they are never written again.
+     */
+    val transitionMode = MutableStateFlow(TransitionMode.GAPLESS)
+
+    /** Automix Pro style cap: SUBTLE / BALANCED / DJ (overlap length). */
+    val automixStyle = MutableStateFlow(AutomixStyle.BALANCED)
+
+    /**
+     * The last transition's verdict (tier, technique, overlap, stretch, key
+     * relation, reason), for stats for nerds. Published by the crossfade
+     * controller; null when no Automix Pro transition has run yet.
+     */
+    val lastTransitionVerdict = MutableStateFlow<TransitionVerdict?>(null)
 
     /** The CPU budget used by Beat This! and vocal analysis for Automix. */
     val automixPerformanceMode = MutableStateFlow(AutomixPerformanceMode.BALANCED)
@@ -785,6 +808,12 @@ object AppSettings {
         exportDownloads.value = prefs.getBoolean(KEY_EXPORT_DOWNLOADS, false)
         crossfadeSeconds.value = prefs.getInt(KEY_CROSSFADE, 0)
         smartFadeEnabled.value = prefs.getBoolean(KEY_SMART_FADE, false)
+        migrateTransitionMode()
+        automixStyle.value = runCatching {
+            AutomixStyle.valueOf(
+                prefs.getString(KEY_AUTOMIX_STYLE, null) ?: AutomixStyle.BALANCED.name,
+            )
+        }.getOrDefault(AutomixStyle.BALANCED)
         automixPerformanceMode.value = runCatching {
             AutomixPerformanceMode.valueOf(
                 prefs.getString(KEY_AUTOMIX_PERFORMANCE_MODE, null) ?: AutomixPerformanceMode.BALANCED.name,
@@ -1071,6 +1100,37 @@ object AppSettings {
     fun setCrossfadeSeconds(value: Int) {
         crossfadeSeconds.value = value
         prefs.edit().putInt(KEY_CROSSFADE, value).apply()
+    }
+
+    /**
+     * One-time migration from the legacy transition controls to the Automix
+     * Pro mode selector. Runs on every [readAll] but only writes when the
+     * new key is absent: a user who already picked a mode keeps it, and a
+     * legacy install gets its behavior preserved (Automix on stays on).
+     */
+    fun migrateTransitionMode() {
+        val stored = prefs.getString(KEY_TRANSITION_MODE, null)
+        if (stored != null) {
+            transitionMode.value = runCatching { TransitionMode.valueOf(stored) }
+                .getOrDefault(TransitionMode.GAPLESS)
+            return
+        }
+        val migrated = migrateLegacyTransitionMode(
+            smartFadeEnabled = prefs.getBoolean(KEY_SMART_FADE, false),
+            crossfadeSeconds = prefs.getInt(KEY_CROSSFADE, 0),
+        )
+        transitionMode.value = migrated
+        prefs.edit().putString(KEY_TRANSITION_MODE, migrated.name).apply()
+    }
+
+    fun setTransitionMode(value: TransitionMode) {
+        transitionMode.value = value
+        prefs.edit().putString(KEY_TRANSITION_MODE, value.name).apply()
+    }
+
+    fun setAutomixStyle(value: AutomixStyle) {
+        automixStyle.value = value
+        prefs.edit().putString(KEY_AUTOMIX_STYLE, value.name).apply()
     }
 
     fun setSmartFadeEnabled(value: Boolean) {
@@ -1926,6 +1986,8 @@ object AppSettings {
     private const val KEY_LOSSLESS = "lossless_audio"
     private const val KEY_CROSSFADE = "crossfade_seconds"
     private const val KEY_SMART_FADE = "smart_fade_enabled"
+    private const val KEY_TRANSITION_MODE = "transition_mode"
+    private const val KEY_AUTOMIX_STYLE = "automix_style"
     private const val KEY_AUTOMIX_PERFORMANCE_MODE = "automix_performance_mode"
     private const val KEY_SKIP_SILENCE = "skip_silence"
     private const val KEY_OUTPUT_PCM_MODE = "output_pcm_mode"

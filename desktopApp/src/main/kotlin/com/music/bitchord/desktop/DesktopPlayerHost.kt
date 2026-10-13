@@ -15,6 +15,8 @@ import com.music.bitchord.data.settings.LastPlayerScreen
 import com.music.bitchord.data.settings.MixBlend
 import com.music.bitchord.data.settings.SmartAnalysis
 import com.music.bitchord.data.settings.TransitionWindow
+import com.music.bitchord.playback.smart.TransitionMode
+import com.music.bitchord.playback.smart.TransitionVerdict
 import com.music.bitchord.ui.player.AudioOutputDevice
 import com.music.bitchord.ui.player.AudioOutputKind
 import com.music.bitchord.ui.player.CanvasVideoSpec
@@ -206,6 +208,8 @@ internal object DesktopPlayerSettings : PlayerSettingsSource {
     override val showNerdStats = MutableStateFlow(false)
     override val smartAnalysis = MutableStateFlow(SmartAnalysis())
     override val smartFadeEnabled = MutableStateFlow(false)
+    override val transitionMode = MutableStateFlow(TransitionMode.GAPLESS)
+    override val lastTransitionVerdict = MutableStateFlow<TransitionVerdict?>(null)
     override val smartMixInProgress = MutableStateFlow(false)
     override val smartMixBlend = MutableStateFlow<MixBlend?>(null)
     override val smartTransitionWindow = MutableStateFlow<TransitionWindow?>(null)

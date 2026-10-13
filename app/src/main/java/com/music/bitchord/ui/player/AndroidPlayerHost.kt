@@ -69,6 +69,8 @@ class AndroidPlayerHost(context: Context) : PlayerHost {
         override val showNerdStats get() = AppSettings.showNerdStats
         override val smartAnalysis get() = AppSettings.smartAnalysis
         override val smartFadeEnabled get() = AppSettings.smartFadeEnabled
+        override val transitionMode get() = AppSettings.transitionMode
+        override val lastTransitionVerdict get() = AppSettings.lastTransitionVerdict
         override val smartMixInProgress get() = AppSettings.smartMixInProgress
         override val smartMixBlend get() = AppSettings.smartMixBlend
         override val smartTransitionWindow get() = AppSettings.smartTransitionWindow

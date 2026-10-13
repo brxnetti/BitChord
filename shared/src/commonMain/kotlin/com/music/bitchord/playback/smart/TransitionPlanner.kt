@@ -234,13 +234,37 @@ private fun itemText(track: TransitionTrackInfo?): String =
         .joinToString(" ")
 
 /** A small stable hash so the same queue pair always receives the same gesture on every target. */
-private fun filterVariantFor(current: TransitionTrackInfo?, next: TransitionTrackInfo?): FilterTransitionVariant {
+private fun filterVariantFor(
+    current: TransitionTrackInfo?,
+    next: TransitionTrackInfo?,
+    recentVariants: List<FilterTransitionVariant> = emptyList(),
+): FilterTransitionVariant {
     var hash = 0xCBF29CE484222325uL
     val key = "${current?.id.orEmpty()}\u0000${next?.id.orEmpty()}"
     for (character in key) {
         hash = (hash xor character.code.toULong()) * 0x100000001B3uL
     }
-    return FilterTransitionVariant.entries[(hash % FilterTransitionVariant.entries.size.toULong()).toInt()]
+    val deterministic =
+        FilterTransitionVariant.entries[(hash % FilterTransitionVariant.entries.size.toULong()).toInt()]
+    // Automix Pro anti-repetition: the pick is deterministic per pair so the
+    // planner never changes its mind mid-song, but when it would repeat one
+    // of the last few transitions' gestures and another variant is valid,
+    // rotate to the next one instead. With no history this is exactly the
+    // old behavior.
+    val recent = recentVariants.takeLast(ANTI_REPEAT_WINDOW).toSet()
+    if (deterministic !in recent || recent.size >= FilterTransitionVariant.entries.size) {
+        return deterministic
+    }
+    // Rotate forward from the deterministic pick to the first variant that
+    // hasn't been used recently; every variant is a valid gesture here, so
+    // there is always one unless the window already holds them all.
+    val entries = FilterTransitionVariant.entries
+    val start = entries.indexOf(deterministic)
+    for (step in 1 until entries.size) {
+        val candidate = entries[(start + step) % entries.size]
+        if (candidate !in recent) return candidate
+    }
+    return deterministic
 }
 
 /**
@@ -1182,6 +1206,18 @@ fun planTransition(
     mode: CrossfadeMode = CrossfadeMode.STANDARD,
     albumSequential: Boolean = false,
     advanced: Boolean = false,
+    /**
+     * Automix Pro style cap: bounds how long a blend may run. The analysis
+     * still picks the technique and the tier; the style only trims the top.
+     */
+    style: AutomixStyle = AutomixStyle.BALANCED,
+    /**
+     * Automix Pro anti-repetition: the filter variants of the most recent
+     * transitions (most recent last, up to [ANTI_REPEAT_WINDOW]). When the
+     * deterministic per-pair pick repeats a recent one and an alternative
+     * variant is valid, the planner rotates to it instead.
+     */
+    recentFilterVariants: List<FilterTransitionVariant> = emptyList(),
 ): TransitionPlan {
     val length = max(duration.orZero(), trackDurationSeconds(currentTrack))
     val playbackTime = max(0.0, currentTime.orZero())
@@ -1269,6 +1305,12 @@ fun planTransition(
 
     phraseSwitch(analysis, nextAnalysis, length, nextLength, advanced)
         ?.takeIf { playbackTime < it.transitionEnd }
+        // Automix Pro style cap: a phrase switch is inherently phrase-length,
+        // and clamping it after the fact would break its beat alignment. When
+        // the style's ceiling is tighter than the phrase needs, the honest
+        // move is not a misaligned phrase switch but the shorter blend the
+        // planner below computes.
+        ?.takeIf { it.fadeSeconds <= style.maxOverlapSeconds + 1e-6 }
         ?.let { plan ->
             val started = playbackTime >= plan.transitionStart
             return capIncomingSkip(
@@ -1283,9 +1325,14 @@ fun planTransition(
         }
 
     val traits = if (advanced) PairTraits(analysis, nextAnalysis) else null
-    val filterVariant = if (traits != null) filterVariantFor(currentTrack, nextTrack) else FilterTransitionVariant.SWEEP
+    val filterVariant = if (traits != null) {
+        filterVariantFor(currentTrack, nextTrack, recentFilterVariants)
+    } else {
+        FilterTransitionVariant.SWEEP
+    }
     val primary = mixPlan(
         analysis, nextAnalysis, mixAnchor, mixOutAnchor.type, length, nextLength, traits, filterVariant,
+        style = style,
     )
     // An exit where the outgoing track is still singing over the incoming one
     // is worth trading for another the analysis ranked, if one halves the
@@ -1298,7 +1345,7 @@ fun planTransition(
         rankedMixOuts.asSequence()
             .filter { abs(it.time - mixAnchor) > 1.0 && it.time <= length }
             .take(MAX_REROUTE_CANDIDATES)
-            .map { mixPlan(analysis, nextAnalysis, it.time, it.type, length, nextLength, traits, filterVariant) }
+            .map { mixPlan(analysis, nextAnalysis, it.time, it.type, length, nextLength, traits, filterVariant, style) }
             .filter { playbackTime < it.transitionStart }
             .minByOrNull { it.vocalOverlap }
             ?.takeIf { it.vocalOverlap <= primary.vocalOverlap * VOCAL_REROUTE_GAIN }
@@ -1332,6 +1379,7 @@ private fun mixPlan(
     nextLength: Double,
     traits: PairTraits?,
     filterVariant: FilterTransitionVariant,
+    style: AutomixStyle = AutomixStyle.BALANCED,
 ): TransitionPlan {
     val currentBpm = analysis.bpm.orZero()
     val nextBpm = nextAnalysis.bpm.orZero()
@@ -1381,6 +1429,10 @@ private fun mixPlan(
     val maximumOverlap = minOf(
         if (handoffBpm > 0) (maxBeats * 60) / handoffBpm else maxSeconds,
         maxSeconds,
+        // Automix Pro style cap: the analysis picks the technique, the style
+        // bounds how long the blend may run. SUBTLE keeps blends short,
+        // BALANCED is the historical behavior, DJ lets strong pairs breathe.
+        style.maxOverlapSeconds,
         mixEnd * 0.4,
         if (nextLength > 0) nextLength * 0.4 else maxSeconds,
     )

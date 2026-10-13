@@ -14,6 +14,8 @@ import com.music.bitchord.data.settings.LastPlayerScreen
 import com.music.bitchord.data.settings.SmartAnalysis
 import com.music.bitchord.data.settings.MixBlend
 import com.music.bitchord.data.settings.TransitionWindow
+import com.music.bitchord.playback.smart.TransitionMode
+import com.music.bitchord.playback.smart.TransitionVerdict
 import dev.chrisbanes.haze.HazeState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -156,6 +158,10 @@ interface PlayerSettingsSource {
     val showNerdStats: StateFlow<Boolean>
     val smartAnalysis: StateFlow<SmartAnalysis>
     val smartFadeEnabled: StateFlow<Boolean>
+    /** Automix Pro: the user-facing transition mode (Off / Crossfade / Gapless / Automix Pro). */
+    val transitionMode: StateFlow<TransitionMode>
+    /** The last Automix Pro transition's verdict, for stats for nerds. */
+    val lastTransitionVerdict: StateFlow<TransitionVerdict?>
     /** True only while an analysed Automix transition is audibly mixing two tracks. */
     val smartMixInProgress: StateFlow<Boolean>
     /** The Automix blend in flight, for the scrubber's beat glow; null between blends. */

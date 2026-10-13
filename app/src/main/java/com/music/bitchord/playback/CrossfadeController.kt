@@ -15,12 +15,18 @@ import com.music.bitchord.data.settings.MixBlend
 import com.music.bitchord.data.settings.SmartAnalysis
 import com.music.bitchord.data.settings.TrackAnalysisState
 import com.music.bitchord.data.settings.TransitionWindow
+import com.music.bitchord.playback.smart.ANTI_REPEAT_WINDOW
 import com.music.bitchord.playback.smart.CrossfadeMode
 import com.music.bitchord.playback.smart.FILTER_ECHO_AT
 import com.music.bitchord.playback.smart.FilterTransitionVariant
 import com.music.bitchord.playback.smart.TrackAnalysis
+import com.music.bitchord.playback.smart.TransitionMode
+import com.music.bitchord.playback.smart.TransitionPlan
 import com.music.bitchord.playback.smart.TransitionStyle
 import com.music.bitchord.playback.smart.TransitionTrackInfo
+import com.music.bitchord.playback.smart.TransitionVerdict
+import com.music.bitchord.playback.smart.assessTransitionTier
+import com.music.bitchord.playback.smart.camelotRelation
 import com.music.bitchord.playback.smart.echoTailSeconds
 import com.music.bitchord.playback.smart.planTransition
 import kotlinx.coroutines.CoroutineScope
@@ -810,7 +816,9 @@ class CrossfadeController(
         // measurement is the same either way, so it may as well be made during
         // the loop rather than after it.
         if (player.repeatMode == Player.REPEAT_MODE_ONE) {
-            if (AppSettings.smartFadeEnabled.value) requestAnalysisAround(player, duration)
+            if (AppSettings.transitionMode.value == TransitionMode.AUTOMIX_PRO) {
+                requestAnalysisAround(player, duration)
+            }
             // Stale otherwise: the marker would keep describing the transition
             // planned for this pair before the loop went on, at a point the
             // playhead now runs past on every lap without anything happening.
@@ -818,13 +826,21 @@ class CrossfadeController(
             return
         }
 
-        // Automix is its own on/off, independent of the manual crossfade
+        // Automix Pro is its own on/off, independent of the manual crossfade
         // length: it decides its own duration from each pair of tracks (beats,
         // tempo, structure), so requiring a nonzero [AppSettings.crossfadeSeconds]
         // first would tie an automatic feature to a manual one it doesn't use.
-        if (AppSettings.smartFadeEnabled.value) {
-            considerSmartTransition(duration)
-            return
+        //
+        // OFF and GAPLESS arm no overlap at all: the track plays out and
+        // Media3's own gapless handoff moves to the next item. CROSSFADE falls
+        // through to the fixed-length path below.
+        when (AppSettings.transitionMode.value) {
+            TransitionMode.AUTOMIX_PRO -> {
+                considerSmartTransition(duration)
+                return
+            }
+            TransitionMode.OFF, TransitionMode.GAPLESS -> return
+            TransitionMode.CROSSFADE -> Unit
         }
 
         if (configuredFadeMs() <= 0L) return
@@ -912,6 +928,8 @@ class CrossfadeController(
             fadeSeconds = fallbackSeconds,
             mode = CrossfadeMode.SMART,
             advanced = advanced,
+            style = AppSettings.automixStyle.value,
+            recentFilterVariants = recentFilterVariants.toList(),
         )
         // One line per distinct verdict rather than one per 250ms tick, so the
         // log says what the planner decided for this pair without burying it.
@@ -1003,6 +1021,13 @@ class CrossfadeController(
         val rampMs = if (beatMs > 0L) rampStepsFor(plan.outgoingPlaybackRate) * beatMs else 0L
         val fileRemaining = duration - player.currentPosition
         if (remaining > ARM_LEAD_MS + rampMs && fileRemaining > armBeforeReadAheadMs()) return
+
+        // Automix Pro anti-repetition + explicability: remember this
+        // transition's gesture so the next plan can avoid repeating it, and
+        // publish the verdict (tier, technique, overlap, stretch, key
+        // relation) for stats for nerds.
+        recordFilterVariant(plan.filterVariant)
+        publishTransitionVerdict(plan, currentAnalysis, nextAnalysis, advanced)
 
         begin(
             fade,
@@ -1147,6 +1172,53 @@ class CrossfadeController(
         title = mediaMetadata.title?.toString().orEmpty(),
         artist = mediaMetadata.artist?.toString().orEmpty(),
     )
+
+    /**
+     * Automix Pro anti-repetition: the filter gestures of the most recent
+     * transitions, fed back into [planTransition] so it can rotate to a
+     * different gesture instead of repeating the same one every time.
+     */
+    private val recentFilterVariants = ArrayDeque<FilterTransitionVariant>()
+
+    private fun recordFilterVariant(variant: FilterTransitionVariant) {
+        recentFilterVariants.addLast(variant)
+        while (recentFilterVariants.size > ANTI_REPEAT_WINDOW) recentFilterVariants.removeFirst()
+    }
+
+    /**
+     * Publishes the transition's verdict for stats for nerds: which
+     * confidence tier the pair earned, which technique was chosen, the
+     * overlap in seconds and beats, the tempo stretch applied, and the
+     * Camelot relationship between the two keys.
+     */
+    private fun publishTransitionVerdict(
+        plan: TransitionPlan,
+        current: TrackAnalysis,
+        next: TrackAnalysis,
+        advanced: Boolean,
+    ) {
+        val tier = assessTransitionTier(current, next, advanced).tier
+        val technique = when (plan.transitionStyle) {
+            TransitionStyle.DJ_BLEND -> "DJ_BLEND"
+            TransitionStyle.DJ_FILTER -> "DJ_FILTER/${plan.filterVariant}"
+            TransitionStyle.EQUAL_POWER -> "EQUAL_POWER"
+            TransitionStyle.GAPLESS -> "GAPLESS"
+        }
+        val stretch = when {
+            plan.incomingPlaybackRate > 1.0 -> plan.incomingPlaybackRate - 1.0
+            plan.outgoingPlaybackRate > 1.0 -> plan.outgoingPlaybackRate - 1.0
+            else -> 0.0
+        }
+        AppSettings.lastTransitionVerdict.value = TransitionVerdict(
+            tier = tier,
+            technique = technique,
+            overlapSeconds = plan.fadeSeconds,
+            overlapBeats = plan.transitionBeats,
+            stretchFraction = stretch,
+            keyRelation = camelotRelation(current.key, next.key),
+            reason = plan.policyReasons.firstOrNull().orEmpty(),
+        )
+    }
 
     /**
      * Loads the standby player with the queue, positioned on the incoming track
@@ -1548,7 +1620,7 @@ class CrossfadeController(
         // [configuredFadeMs] at zero, and reading that as "turned off" would
         // end every Automix on its first tick.
         val settingSwitchedOff = if (smartFadeActive) {
-            !AppSettings.smartFadeEnabled.value
+            AppSettings.transitionMode.value != TransitionMode.AUTOMIX_PRO
         } else {
             configuredFadeMs() <= 0L
         }
@@ -1814,7 +1886,11 @@ class CrossfadeController(
 
     /** Still a next track, still playing, still switched on — by whichever setting armed this one. */
     private fun stillWorthFading(): Boolean {
-        val stillOn = if (smartFadeActive) AppSettings.smartFadeEnabled.value else configuredFadeMs() > 0L
+        val stillOn = if (smartFadeActive) {
+            AppSettings.transitionMode.value == TransitionMode.AUTOMIX_PRO
+        } else {
+            AppSettings.transitionMode.value == TransitionMode.CROSSFADE && configuredFadeMs() > 0L
+        }
         return stillOn && (outgoing ?: active()).hasNextMediaItem()
     }
 

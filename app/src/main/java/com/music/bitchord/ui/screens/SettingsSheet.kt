@@ -141,6 +141,8 @@ import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.data.settings.OutputPcmMode
 import com.music.bitchord.playback.AudioOutputStatus
 import com.music.bitchord.data.settings.AutomixPerformanceMode
+import com.music.bitchord.playback.smart.AutomixStyle
+import com.music.bitchord.playback.smart.TransitionMode
 import com.music.bitchord.R
 import com.music.bitchord.data.sources.DeviceCodecs
 import com.music.bitchord.data.settings.AudioQuality
@@ -187,7 +189,8 @@ fun SettingsScreen(
     val cellularQuality by AppSettings.audioQualityCellular.collectAsStateWithLifecycle()
     val metered by AppSettings.meteredConnection.collectAsStateWithLifecycle()
     val crossfade by AppSettings.crossfadeSeconds.collectAsStateWithLifecycle()
-    val smartFade by AppSettings.smartFadeEnabled.collectAsStateWithLifecycle()
+    val transitionMode by AppSettings.transitionMode.collectAsStateWithLifecycle()
+    val automixStyle by AppSettings.automixStyle.collectAsStateWithLifecycle()
     val automixPerformance by AppSettings.automixPerformanceMode.collectAsStateWithLifecycle()
     val skipSilence by AppSettings.skipSilence.collectAsStateWithLifecycle()
     val dolbyAtmos by AppSettings.dolbyAtmos.collectAsStateWithLifecycle()
@@ -272,6 +275,8 @@ fun SettingsScreen(
     var picking by remember { mutableStateOf<QualityTarget?>(null) }
     var pickingDownloadQuality by remember { mutableStateOf(false) }
     var pickingAutomixPerformance by remember { mutableStateOf(false) }
+    var pickingTransitionMode by remember { mutableStateOf(false) }
+    var pickingAutomixStyle by remember { mutableStateOf(false) }
     // What the last export or import did, shown on the row that did it rather
     // than as a toast: a backup is the one action here whose outcome nobody can
     // check by looking at the app afterwards. Held per direction, or an import's
@@ -613,10 +618,11 @@ fun SettingsScreen(
                     onCheckedChange = AppSettings::setLoudnessOffOnSpeaker,
                 )
             }
-            // Automix decides its own length from each pair of tracks —
+            // Automix Pro decides its own length from each pair of tracks —
             // tempo, key, structure — so it replaces the manual slider rather
-            // than needing it set to anything first.
-            if (!smartFade) {
+            // than needing it set to anything first. The slider only applies
+            // to the manual Crossfade mode.
+            if (transitionMode == TransitionMode.CROSSFADE) {
                 val crossfadeTitle = stringResource(R.string.crossfade)
                 row(crossfadeTitle, "fade", "gapless") {
                     SliderRow(
@@ -632,27 +638,25 @@ fun SettingsScreen(
                 }
             }
             val automixTitle = stringResource(R.string.automix)
-            row(automixTitle, "crossfade", "smart fade", "mix") {
+            row(automixTitle, "crossfade", "smart fade", "mix", "transition") {
                 SettingsRow(
                     icon = Icons.Rounded.AutoAwesome,
                     title = automixTitle,
-                    subtitle = if (smartFade) {
-                        stringResource(R.string.automix_enabled_subtitle)
-                    } else {
-                        stringResource(R.string.automix_disabled_subtitle)
-                    },
-                    trailing = {
-                        Switch(
-                            checked = smartFade,
-                            onCheckedChange = AppSettings::setSmartFadeEnabled,
-                            colors = SwitchDefaults.colors(
-                                checkedTrackColor = MaterialTheme.colorScheme.primary,
-                                checkedBorderColor = MaterialTheme.colorScheme.primary,
-                            ),
-                        )
-                    },
-                    onClick = { AppSettings.setSmartFadeEnabled(!smartFade) },
+                    subtitle = transitionMode.localizedLabel(),
+                    onClick = { pickingTransitionMode = true },
                 )
+            }
+            if (transitionMode == TransitionMode.AUTOMIX_PRO) {
+                val automixStyleTitle = stringResource(R.string.automix_style)
+                row(automixStyleTitle, "style", "dj", "subtle") {
+                    SettingsRow(
+                        icon = Icons.Rounded.Tune,
+                        title = automixStyleTitle,
+                        subtitle = stringResource(R.string.automix_style_subtitle),
+                        value = automixStyle.localizedLabel(),
+                        onClick = { pickingAutomixStyle = true },
+                    )
+                }
             }
             val automixPerformanceTitle = stringResource(R.string.automix_performance)
             row(automixPerformanceTitle, "cpu", "battery") {
@@ -1485,6 +1489,36 @@ fun SettingsScreen(
         }
     }
 
+    if (pickingTransitionMode) {
+        ModalBottomSheet(
+            onDismissRequest = { pickingTransitionMode = false },
+            containerColor = MaterialTheme.colorScheme.background,
+        ) {
+            TransitionModeSheet(
+                selected = transitionMode,
+                onSelect = { mode ->
+                    AppSettings.setTransitionMode(mode)
+                    pickingTransitionMode = false
+                },
+            )
+        }
+    }
+
+    if (pickingAutomixStyle) {
+        ModalBottomSheet(
+            onDismissRequest = { pickingAutomixStyle = false },
+            containerColor = MaterialTheme.colorScheme.background,
+        ) {
+            AutomixStyleSheet(
+                selected = automixStyle,
+                onSelect = { style ->
+                    AppSettings.setAutomixStyle(style)
+                    pickingAutomixStyle = false
+                },
+            )
+        }
+    }
+
     // Everything in the Cached songs folder goes with it, so say so first.
     if (confirmClearSongCache) {
         AlertDialog(
@@ -1751,6 +1785,40 @@ private fun AutomixPerformanceMode.localizedLabel(): String = stringResource(
     },
 )
 
+private fun TransitionMode.localizedLabel(): String = stringResource(
+    when (this) {
+        TransitionMode.OFF -> R.string.transition_mode_off
+        TransitionMode.CROSSFADE -> R.string.transition_mode_crossfade
+        TransitionMode.GAPLESS -> R.string.transition_mode_gapless
+        TransitionMode.AUTOMIX_PRO -> R.string.automix
+    },
+)
+
+private fun AutomixStyle.localizedLabel(): String = stringResource(
+    when (this) {
+        AutomixStyle.SUBTLE -> R.string.automix_style_subtle
+        AutomixStyle.BALANCED -> R.string.automix_style_balanced
+        AutomixStyle.DJ -> R.string.automix_style_dj
+    },
+)
+
+private fun transitionModeSubtitle(mode: TransitionMode): String = stringResource(
+    when (mode) {
+        TransitionMode.OFF -> R.string.transition_mode_off_subtitle
+        TransitionMode.CROSSFADE -> R.string.transition_mode_crossfade_subtitle
+        TransitionMode.GAPLESS -> R.string.transition_mode_gapless_subtitle
+        TransitionMode.AUTOMIX_PRO -> R.string.transition_mode_automix_pro_subtitle
+    },
+)
+
+private fun automixStyleSubtitle(style: AutomixStyle): String = stringResource(
+    when (style) {
+        AutomixStyle.SUBTLE -> R.string.automix_style_subtle_subtitle
+        AutomixStyle.BALANCED -> R.string.automix_style_balanced_subtitle
+        AutomixStyle.DJ -> R.string.automix_style_dj_subtitle
+    },
+)
+
 /**
  * Hands the device's own effect panel this app's audio session.
  *
@@ -2004,6 +2072,150 @@ private fun AutomixPerformanceSheet(
                                 AutomixPerformanceMode.PERFORMANCE -> R.string.automix_mode_performance_subtitle
                             },
                         ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                if (chosen) {
+                    Spacer(Modifier.width(12.dp))
+                    Icon(
+                        Icons.Rounded.Check,
+                        contentDescription = stringResource(R.string.selected),
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Automix Pro transition-mode picker: Off / Crossfade / Gapless / Automix Pro.
+ */
+private fun TransitionModeSheet(
+    selected: TransitionMode,
+    onSelect: (TransitionMode) -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+    Column(Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
+        Row(
+            modifier = Modifier.padding(start = 22.dp, end = 22.dp, bottom = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.AutoAwesome,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.size(22.dp),
+            )
+            Spacer(Modifier.width(14.dp))
+            Column {
+                Text(
+                    text = stringResource(R.string.automix),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Text(
+                    text = stringResource(R.string.transition_mode_subtitle),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outline)
+        TransitionMode.entries.forEach { mode ->
+            val chosen = mode == selected
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onSelect(mode)
+                    }
+                    .padding(horizontal = 22.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = mode.localizedLabel(),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
+                    Text(
+                        text = transitionModeSubtitle(mode),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                if (chosen) {
+                    Spacer(Modifier.width(12.dp))
+                    Icon(
+                        Icons.Rounded.Check,
+                        contentDescription = stringResource(R.string.selected),
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Automix Pro style picker: how long a blend may run (Subtle / Balanced / DJ).
+ */
+private fun AutomixStyleSheet(
+    selected: AutomixStyle,
+    onSelect: (AutomixStyle) -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+    Column(Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
+        Row(
+            modifier = Modifier.padding(start = 22.dp, end = 22.dp, bottom = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Tune,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.size(22.dp),
+            )
+            Spacer(Modifier.width(14.dp))
+            Column {
+                Text(
+                    text = stringResource(R.string.automix_style),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Text(
+                    text = stringResource(R.string.automix_style_subtitle),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outline)
+        AutomixStyle.entries.forEach { style ->
+            val chosen = style == selected
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onSelect(style)
+                    }
+                    .padding(horizontal = 22.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = style.localizedLabel(),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
+                    Text(
+                        text = automixStyleSubtitle(style),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

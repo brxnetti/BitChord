@@ -9,6 +9,8 @@ import com.music.bitchord.data.model.ArtistCredit
 import com.music.bitchord.data.model.CreditSegment
 import com.music.bitchord.data.model.creditSegments
 import com.music.bitchord.sharedui.resources.*
+import com.music.bitchord.playback.smart.TransitionMode
+import com.music.bitchord.playback.smart.describe
 
 import org.jetbrains.compose.resources.DrawableResource
 import androidx.compose.animation.animateContentSize
@@ -324,7 +326,8 @@ internal fun SleeveNerdStats(song: Song, modifier: Modifier = Modifier) {
     val showNerdStats by PlayerSettings.showNerdStats.collectAsStateWithLifecycle()
     if (!showNerdStats) return
     val nerdStats by NerdStats.current.collectAsStateWithLifecycle()
-    val smartFadeOn by PlayerSettings.smartFadeEnabled.collectAsStateWithLifecycle()
+    val transitionMode by PlayerSettings.transitionMode.collectAsStateWithLifecycle()
+    val lastVerdict by PlayerSettings.lastTransitionVerdict.collectAsStateWithLifecycle()
     val smartAnalysis by PlayerSettings.smartAnalysis.collectAsStateWithLifecycle()
     // A party doesn't mix, and doesn't analyse for one either — see
     // [com.music.bitchord.playback.CrossfadeController]. So the two flows above
@@ -362,10 +365,10 @@ internal fun SleeveNerdStats(song: Song, modifier: Modifier = Modifier) {
                 textAlign = TextAlign.Center,
             )
         }
-        // Only when Automix is actually switched on: otherwise this would
+        // Only when Automix Pro is actually switched on: otherwise this would
         // report on analysis nothing is going to use, which is noise rather
         // than a stat.
-        if (smartFadeOn) {
+        if (transitionMode == TransitionMode.AUTOMIX_PRO) {
             Text(
                 // Both sides always named, even when they agree, so the line
                 // reads the same way every time and the eye can find the half
@@ -393,6 +396,18 @@ internal fun SleeveNerdStats(song: Song, modifier: Modifier = Modifier) {
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center,
             )
+            // The last transition's verdict: tier, technique, overlap,
+            // stretch and key relation, as the planner decided them.
+            lastVerdict?.let { verdict ->
+                Text(
+                    text = verdict.describe(),
+                    style = nerdStyle,
+                    color = Color.White.copy(alpha = 0.5f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
     }
 }
