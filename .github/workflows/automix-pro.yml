@@ -38,6 +38,10 @@ echo "LASTFM_SECRET=<redacted>
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Install NDK r28c
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;28.2.13676358"
+
       - name: Shared module tests (Automix Pro planner)
         run: ./gradlew :shared:jvmTest
 
