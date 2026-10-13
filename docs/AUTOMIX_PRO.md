@@ -128,7 +128,9 @@ Rama: `automix-pro` (sobre `main` @ `fe95bb6`). Fecha: 2026-10-13.
   el entorno solo deja ~0.5 GB libres y el daemon no sobrevive). En su
   lugar, el módulo `shared` (donde vive toda la lógica nueva de Automix
   Pro) **sí compiló limpio** con kotlinc 2.3.20 directo y sus pruebas
-  corrieron: 15 nuevas (`AutomixProTest`) + 11 existentes
+  corrieron: 20 nuevas (`AutomixProTest`: migración, topes por estilo,
+  anti-repetición, Camelot, **selección armónica de técnica, solape matcheado
+  por energía**, veredicto) + 11 existentes
   (`AdvancedAutomixPlannerTest`), todas en verde. El APK se compila en
   GitHub Actions con `.github/workflows/automix-pro.yml` (corre
   `:shared:jvmTest`, `assembleProdRelease`, verifica con `aapt2`/`zipalign`/
@@ -181,6 +183,17 @@ TrackAnalyzer ──► TrackAnalysis ──► assessTransitionTier ──► N
   solape en segundos y compases, estiramiento %, relación de tonalidad en
   Camelot, motivo) a "Stats for nerds" (`AppSettings.lastTransitionVerdict`);
   el indicador "Mixing" ya existe (`smartMixInProgress`).
+- **Selección armónica de técnica** (`HarmonicRelation` en `AutomixPro.kt`):
+  un clash de tonalidad (p. ej. C mayor → F♯ mayor) nunca se mezcla abierto,
+  por más que los tempos coincidan: esos pares usan el ride de filtro con su
+  low-pass de cierre enmascarando la disonancia. Tonalidades compatibles
+  conservan el `DJ_BLEND` abierto; con tonalidad desconocida/poco confiable,
+  el comportamiento es el histórico. El clash se aplica vía el *estilo*, no
+  vía la variante de filtro, para no matar la variedad de gestos.
+- **Solape matcheado por energía**: si la cabeza del tema entrante es mucho
+  más silenciosa que la cola del saliente (energía media < 0.5×), el solape
+  se topa a 6 s en vez de arrastrar un outro fuerte sobre un intro
+  silencioso.
 
 ## 4. Parámetros (un solo lugar)
 
@@ -204,10 +217,11 @@ tope del estilo antes de tocar los umbrales de confianza (ya calibrados).
 
 ## 5. Pruebas
 
-- Unitarias (JVM): `AutomixProTest` (15 pruebas: migración del modo legado,
-  topes por estilo, anti-repetición, Camelot, formato del veredicto) y
+- Unitarias (JVM): `AutomixProTest` (20 pruebas: migración del modo legado,
+  topes por estilo, anti-repetición, Camelot, selección armónica de técnica,
+  solape matcheado por energía, formato del veredicto) y
   `AdvancedAutomixPlannerTest` (11 pruebas existentes, sin regresiones).
-  Compiladas y corridas con kotlinc 2.3.20 directo el 2026-10-13: 26/26 en
+  Compiladas y corridas con kotlinc 2.3.20 directo el 2026-10-13: 31/31 en
   verde. (El runner de Gradle no funciona en este entorno; en CI corren vía
   `./gradlew :shared:jvmTest`.)
 - Compilación: `./gradlew assembleProdRelease` en cada hito — en GitHub
