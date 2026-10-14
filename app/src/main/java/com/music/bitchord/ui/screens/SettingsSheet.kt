@@ -1777,6 +1777,7 @@ private fun ThemeMode.localizedLabel(): String = stringResource(
 )
 
 @Composable
+@Composable
 private fun AutomixPerformanceMode.localizedLabel(): String = stringResource(
     when (this) {
         AutomixPerformanceMode.EFFICIENT -> R.string.automix_mode_efficient
@@ -1785,6 +1786,7 @@ private fun AutomixPerformanceMode.localizedLabel(): String = stringResource(
     },
 )
 
+@Composable
 private fun TransitionMode.localizedLabel(): String = stringResource(
     when (this) {
         TransitionMode.OFF -> R.string.transition_mode_off
@@ -1794,6 +1796,7 @@ private fun TransitionMode.localizedLabel(): String = stringResource(
     },
 )
 
+@Composable
 private fun AutomixStyle.localizedLabel(): String = stringResource(
     when (this) {
         AutomixStyle.SUBTLE -> R.string.automix_style_subtle
@@ -1802,6 +1805,7 @@ private fun AutomixStyle.localizedLabel(): String = stringResource(
     },
 )
 
+@Composable
 private fun transitionModeSubtitle(mode: TransitionMode): String = stringResource(
     when (mode) {
         TransitionMode.OFF -> R.string.transition_mode_off_subtitle
@@ -1811,6 +1815,7 @@ private fun transitionModeSubtitle(mode: TransitionMode): String = stringResourc
     },
 )
 
+@Composable
 private fun automixStyleSubtitle(style: AutomixStyle): String = stringResource(
     when (style) {
         AutomixStyle.SUBTLE -> R.string.automix_style_subtle_subtitle
@@ -2093,6 +2098,7 @@ private fun AutomixPerformanceSheet(
 /**
  * Automix Pro transition-mode picker: Off / Crossfade / Gapless / Automix Pro.
  */
+@Composable
 private fun TransitionModeSheet(
     selected: TransitionMode,
     onSelect: (TransitionMode) -> Unit,
@@ -2165,6 +2171,7 @@ private fun TransitionModeSheet(
 /**
  * Automix Pro style picker: how long a blend may run (Subtle / Balanced / DJ).
  */
+@Composable
 private fun AutomixStyleSheet(
     selected: AutomixStyle,
     onSelect: (AutomixStyle) -> Unit,
