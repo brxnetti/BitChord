@@ -1777,7 +1777,6 @@ private fun ThemeMode.localizedLabel(): String = stringResource(
 )
 
 @Composable
-@Composable
 private fun AutomixPerformanceMode.localizedLabel(): String = stringResource(
     when (this) {
         AutomixPerformanceMode.EFFICIENT -> R.string.automix_mode_efficient
