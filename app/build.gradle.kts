@@ -4,7 +4,11 @@ import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
+    // No `org.jetbrains.kotlin.android` here (branch material3-expressive,
+    // AGP 9.1.1): since AGP 9.0 Kotlin support is built into AGP and the
+    // plugin refuses to apply — run 42664364521 failed exactly on it
+    // ("no longer required ... Solution: Remove the plugin"). The `kotlin {}`
+    // compilerOptions block below keeps working: AGP provides it.
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
 }

@@ -3,7 +3,8 @@ import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
+    // No `org.jetbrains.kotlin.android`: built into AGP since 9.0, the plugin
+    // refuses to apply (same fix as app/ — run 42664364521).
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
 }
