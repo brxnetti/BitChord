@@ -238,6 +238,11 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        // Same AGP 9.0 resValues opt-in as app/: both flavors here declare
+        // resValue("string", "app_name", "BitChord TV"), so without this the
+        // module would fail configuration with the identical "custom resource
+        // values, but the feature is disabled" error once :app passes.
+        resValues = true
     }
     testOptions {
         unitTests {

@@ -225,6 +225,15 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        // AGP 9.0 flipped the resValues default true -> false
+        // (android.defaults.buildfeatures.resvalues): a product flavor that
+        // declares resValue() now fails configuration with "Product Flavor
+        // dev contains custom resource values, but the feature is disabled"
+        // unless the subproject opts back in here. Run 42666771193 failed
+        // exactly on this, at the dev flavor's app_name resValue below.
+        // This keeps dev = "BitChord Dev" and prod = "BitChord"
+        // (strings.xml) with no other change.
+        resValues = true
     }
     testOptions {
         unitTests {
