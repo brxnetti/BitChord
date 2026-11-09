@@ -58,7 +58,11 @@ extra["bitchordBetaSuffix"] = ""
  */
 plugins {
     id("com.android.application") version "9.1.1" apply false
-    id("com.android.library") version "9.1.1" apply false
+    // AGP 9.1.1 (branch material3-expressive, run 42667341916): the legacy
+    // 'com.android.library' plugin cannot be combined with
+    // 'org.jetbrains.kotlin.multiplatform' anymore, so shared/sharedUi use
+    // the Android-KMP library plugin instead (see their build files).
+    id("com.android.kotlin.multiplatform.library") version "9.1.1" apply false
     // No `org.jetbrains.kotlin.android` (branch material3-expressive,
     // AGP 9.1.1): since AGP 9.0 Kotlin support is built into AGP and the
     // plugin refuses to apply — run 42664364521 failed exactly on it.

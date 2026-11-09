@@ -2,13 +2,21 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("org.jetbrains.kotlin.multiplatform")
-    id("com.android.library")
+    id("com.android.kotlin.multiplatform.library")
     id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 kotlin {
-    androidTarget {
-        compilerOptions {
+    // AGP 9.1.1 (branch material3-expressive, run 42667341916): the legacy
+    // 'com.android.library' plugin cannot be combined with KMP anymore, so
+    // this module uses 'com.android.kotlin.multiplatform.library'. Per its
+    // docs there is no top-level android {} block: namespace, compileSdk
+    // and minSdk live in kotlin { android { ... } }.
+    android {
+        namespace = "com.music.bitchord.shared"
+        compileSdk = 36
+        minSdk = 26
+        compilerOptions.configure {
             jvmTarget.set(JvmTarget.JVM_17)
         }
     }
@@ -61,9 +69,4 @@ kotlin {
             implementation("com.squareup.okhttp3:mockwebserver:5.3.2")
         }
     }
-}
-
-android {
-    namespace = "com.music.bitchord.shared"
-    compileSdk = 36
 }
