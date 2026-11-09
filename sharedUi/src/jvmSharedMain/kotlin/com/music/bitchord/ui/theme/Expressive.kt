@@ -88,7 +88,10 @@ import androidx.compose.ui.unit.dp
 /** Expressive motion: springs, not durations. Bouncy for presses, standard for layout. */
 object ExpressiveMotion {
     /** A press: quick, underdamped, lands with a little overshoot. */
-    fun press() = spring<Float>(dampingRatio = 0.65f, stiffness = 500f)
+    // Generic on purpose (run 42671163263): the same press spring drives
+    // Float animations (press scale) and Dp ones (slider thumb), and a
+    // SpringSpec<Float> does not satisfy AnimationSpec<Dp>.
+    fun <T> press() = spring<T>(dampingRatio = 0.65f, stiffness = 500f)
 
     /** Layout following a press or a selection: firm, barely any overshoot. */
     fun layout() = spring<Float>(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow)

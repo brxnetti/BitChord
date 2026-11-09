@@ -47,7 +47,10 @@ android {
 
     sourceSets {
         // The phone <-> watch protocol, shared with :app. See WearProtocol.
-        getByName("main") { java.srcDir("protocol") }
+        // AGP 9.1.1: srcDir() is deprecated and no longer registers the dir
+        // (run 42671163263: WearProtocol unresolved); the replacement is the
+        // `directories` mutable set of path strings.
+        getByName("main") { java.directories.add("protocol") }
     }
 
     flavorDimensions += "env"

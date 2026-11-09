@@ -126,13 +126,15 @@ android {
      *   - src/main/AndroidManifest.xml: TV's own — LEANBACK_LAUNCHER, TvActivity.
      */
     sourceSets {
+        // AGP 9.1.1: srcDir() is deprecated and no longer registers the dir;
+        // the replacement is the `directories` mutable set of path strings.
         getByName("main") {
-            java.srcDir("../app/src/main/java")
-            res.srcDir("../app/src/main/res")
-            assets.srcDir("../app/src/main/assets")
-            jniLibs.srcDir("../app/src/main/jniLibs")
+            java.directories.add("../app/src/main/java")
+            res.directories.add("../app/src/main/res")
+            assets.directories.add("../app/src/main/assets")
+            jniLibs.directories.add("../app/src/main/jniLibs")
         }
-        getByName("debug") { java.srcDir("../app/src/debug/java") }
+        getByName("debug") { java.directories.add("../app/src/debug/java") }
         // Created later by the "dev" flavor below, so picked up when it appears.
         configureEach { if (name == "dev") manifest.srcFile("src/dev/AndroidManifest.xml") }
     }

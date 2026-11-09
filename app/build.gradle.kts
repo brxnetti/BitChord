@@ -118,8 +118,10 @@ android {
 
     // The phone <-> watch protocol, one file shared with the watch app so the
     // two cannot drift. See wearos/protocol/.../WearProtocol.kt.
+    // AGP 9.1.1: srcDir() is deprecated and no longer registers the dir;
+    // the replacement is the `directories` mutable set of path strings.
     sourceSets {
-        getByName("main") { java.srcDir("../wearos/protocol") }
+        getByName("main") { java.directories.add("../wearos/protocol") }
     }
 
     externalNativeBuild {
