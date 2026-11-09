@@ -307,7 +307,15 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
+    // Material 3 Expressive ALPHA (branch material3-expressive, run
+    // 42675726145): pinned to the same 1.5.0-rc01 as :app. TV compiles the
+    // phone app's sources (see the sourceSets block above), so it MUST see
+    // the same material3 as :app — without the pin it resolved to
+    // 1.5.0-alpha17 (transitively through :sharedUi's JetBrains material3),
+    // where SheetState has no `enabledValues` and MaterialExpressiveTheme /
+    // Shapes are still experimental: 7 errors in :tv:compileProdReleaseKotlin
+    // while :app itself compiled clean.
+    implementation("androidx.compose.material3:material3:1.5.0-rc01")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.navigation:navigation-compose:2.8.5")
