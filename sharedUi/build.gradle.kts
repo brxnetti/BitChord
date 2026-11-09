@@ -82,7 +82,7 @@ kotlin {
         namespace = "com.music.bitchord.sharedui"
         compileSdk = 36
         minSdk = 26
-        compilerOptions.configure {
+        compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
     }
