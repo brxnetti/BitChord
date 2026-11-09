@@ -17,10 +17,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -137,10 +137,10 @@ private fun LyricsProviderRow(
             contentAlignment = Alignment.Center,
         ) {
             when {
-                state == LyricsProviderState.FETCHING -> CircularProgressIndicator(
+                state == LyricsProviderState.FETCHING -> ExpressiveLoadingIndicator(
                     color = Color.White.copy(alpha = 0.8f),
-                    strokeWidth = 2.dp,
-                    modifier = Modifier.size(20.dp),
+                    containerSize = 28.dp,
+                    shapeSize = 20.dp,
                 )
                 current || state == LyricsProviderState.FOUND -> Icon(
                     imageVector = Icons.Rounded.Check,

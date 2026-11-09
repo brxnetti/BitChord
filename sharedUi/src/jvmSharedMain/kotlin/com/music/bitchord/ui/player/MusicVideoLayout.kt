@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
@@ -33,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
+import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
 import com.music.bitchord.sharedui.resources.Res
 import com.music.bitchord.sharedui.resources.video_quality
 import com.music.bitchord.sharedui.resources.video_quality_auto
@@ -198,10 +198,10 @@ internal fun FullscreenVideoPlayer(
 @Composable
 internal fun VideoLoadingBackdrop(modifier: Modifier = Modifier) {
     Box(modifier.background(Color.Black), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(
+        ExpressiveLoadingIndicator(
             color = Color.White,
-            strokeWidth = 3.dp,
-            modifier = Modifier.size(36.dp),
+            containerSize = 44.dp,
+            shapeSize = 36.dp,
         )
     }
 }

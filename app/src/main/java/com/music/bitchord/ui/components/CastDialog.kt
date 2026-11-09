@@ -17,10 +17,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Cast
 import androidx.compose.material.icons.rounded.CastConnected
 import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -164,10 +164,10 @@ private fun CastDeviceRow(
             }
         }
         when {
-            connecting -> CircularProgressIndicator(
-                modifier = Modifier.size(16.dp),
+            connecting -> ExpressiveLoadingIndicator(
                 color = Color.White.copy(alpha = 0.8f),
-                strokeWidth = 1.75.dp,
+                containerSize = 24.dp,
+                shapeSize = 16.dp,
             )
             connected -> Icon(
                 imageVector = Icons.Rounded.Check,
@@ -188,10 +188,10 @@ private fun SearchingRow() {
             .padding(horizontal = 24.dp, vertical = 22.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        CircularProgressIndicator(
-            modifier = Modifier.size(20.dp),
+        ExpressiveLoadingIndicator(
             color = Color.White.copy(alpha = 0.7f),
-            strokeWidth = 2.dp,
+            containerSize = 28.dp,
+            shapeSize = 20.dp,
         )
         Spacer(Modifier.height(12.dp))
         Text(

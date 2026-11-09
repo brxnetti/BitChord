@@ -5,9 +5,18 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
  *
  * Library versions are pinned to the Compose Multiplatform release whose
  * Android artifacts are the androidx ones the phone app already runs (CMP
- * 1.10.x -> androidx 1.10.x, material3 1.7.3 -> androidx material3 1.3.1), so
+ * 1.10.x -> androidx 1.10.x, material3 1.9.0 -> androidx material3 1.4.0), so
  * depending on this module never moves the phone's Compose underneath it. The
  * desktop resolves its own newer versions over these at the top of its graph.
+ *
+ * Material 3 Expressive (branch material3-expressive): JetBrains material3
+ * 1.9.0 is the latest stable (verified on Maven Central 2026-11-09) and its
+ * Android artifact is androidx material3 1.4.0 (per the published POM), which
+ * is also what the phone app pins directly — one Expressive API surface for
+ * both modules. Stable 1.4.0 keeps MaterialExpressiveTheme / ButtonGroup /
+ * SplitButton / LoadingIndicator internal or absent (verified against the
+ * published sources jar), so the Expressive components live in this module's
+ * ui/theme/Expressive.kt, built on the public 1.4.0 API. See M3X-NOTES.md.
  *
  * The pin is the *Android* anchor only. On the JVM it is a floor, not a
  * ceiling — and there it matters which version compiles this module, because
@@ -71,8 +80,8 @@ kotlin {
             api("org.jetbrains.compose.foundation:foundation:$cmp")
             api("org.jetbrains.compose.animation:animation:$cmp")
             api("org.jetbrains.compose.ui:ui:$cmp")
-            api("org.jetbrains.compose.material3:material3:1.7.3")
-            api("org.jetbrains.compose.material:material-icons-extended:1.7.3")
+            api("org.jetbrains.compose.material3:material3:1.9.0")
+            api("org.jetbrains.compose.material:material-icons-extended:1.9.0")
             api("org.jetbrains.compose.components:components-resources:$cmp")
             api("org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose:2.8.4")
             api("io.coil-kt.coil3:coil-compose:3.0.4")

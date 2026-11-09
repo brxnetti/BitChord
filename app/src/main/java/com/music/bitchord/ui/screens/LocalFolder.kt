@@ -44,6 +44,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -909,10 +910,10 @@ private fun RowDownloadButton(song: Song, palette: ArtworkPalette, onDownload: (
         contentAlignment = Alignment.Center,
     ) {
         when (state) {
-            is DownloadState.Queued -> CircularProgressIndicator(
-                modifier = Modifier.size(18.dp),
-                strokeWidth = 2.dp,
+            is DownloadState.Queued -> ExpressiveLoadingIndicator(
                 color = palette.accent,
+                containerSize = 26.dp,
+                shapeSize = 18.dp,
             )
             is DownloadState.Running -> if (state.fraction > 0f) {
                 CircularProgressIndicator(
@@ -922,10 +923,10 @@ private fun RowDownloadButton(song: Song, palette: ArtworkPalette, onDownload: (
                     color = palette.accent,
                 )
             } else {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(18.dp),
-                    strokeWidth = 2.dp,
+                ExpressiveLoadingIndicator(
                     color = palette.accent,
+                    containerSize = 26.dp,
+                    shapeSize = 18.dp,
                 )
             }
             is DownloadState.Failed -> Icon(

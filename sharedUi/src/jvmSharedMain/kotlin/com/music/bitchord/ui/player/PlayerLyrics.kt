@@ -52,10 +52,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Translate
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -1489,10 +1489,10 @@ internal fun TranslationToggleButton(
         contentAlignment = Alignment.Center,
     ) {
         if (state is LyricsTranslationUiState.Loading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(16.dp),
+            ExpressiveLoadingIndicator(
                 color = tint,
-                strokeWidth = 1.7.dp,
+                containerSize = 24.dp,
+                shapeSize = 16.dp,
             )
         } else {
             Icon(
@@ -1542,10 +1542,10 @@ internal fun RomanizationToggleButton(
         contentAlignment = Alignment.Center,
     ) {
         if (state is LyricsTranslationUiState.Loading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(16.dp),
+            ExpressiveLoadingIndicator(
                 color = tint,
-                strokeWidth = 1.7.dp,
+                containerSize = 24.dp,
+                shapeSize = 16.dp,
             )
         } else {
             Icon(

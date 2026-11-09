@@ -18,9 +18,9 @@ import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.IosShare
 import androidx.compose.material.icons.rounded.PhoneIphone
 import androidx.compose.material.icons.rounded.Undo
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -121,10 +121,10 @@ internal fun AndroidLyricsShareSheet(
                         .background(Color.White.copy(alpha = 0.06f)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(26.dp),
-                        strokeWidth = 2.5.dp,
+                    ExpressiveLoadingIndicator(
                         color = Color.White.copy(alpha = 0.75f),
+                        containerSize = 34.dp,
+                        shapeSize = 26.dp,
                     )
                 }
             } else {

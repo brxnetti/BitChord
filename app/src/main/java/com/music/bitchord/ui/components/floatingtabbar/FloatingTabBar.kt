@@ -1270,7 +1270,10 @@ object FloatingTabBarDefaults {
     fun colors(
         backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
         accessoryBackgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        indicatorColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+        // Expressive (branch material3-expressive): the selected tab sits on
+        // a solid tonal pill, not a 14% wash — the selection has to read at
+        // a glance.
+        indicatorColor: Color = MaterialTheme.colorScheme.primaryContainer,
     ): FloatingTabBarColors = FloatingTabBarColors(
         backgroundColor = backgroundColor,
         accessoryBackgroundColor = accessoryBackgroundColor,
@@ -1313,7 +1316,9 @@ object FloatingTabBarDefaults {
     fun sizes(
         tabBarContentPadding: PaddingValues = PaddingValues(vertical = 4.dp, horizontal = 4.dp),
         tabInlineContentPadding: PaddingValues = PaddingValues(10.dp),
-        tabExpandedContentPadding: PaddingValues = PaddingValues(vertical = 6.dp, horizontal = 20.dp),
+        // Expressive (branch material3-expressive): taller tab cells, 10dp
+        // vertical padding, for a bigger touch target and more air.
+        tabExpandedContentPadding: PaddingValues = PaddingValues(vertical = 10.dp, horizontal = 20.dp),
         componentSpacing: Dp = 8.dp,
         tabSpacing: Dp = 0.dp,
         inlineComponentSpacing: Dp = componentSpacing,

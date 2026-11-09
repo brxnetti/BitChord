@@ -77,7 +77,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -102,7 +101,10 @@ import com.music.bitchord.data.model.Song
 import com.music.bitchord.data.model.isMatchPending
 import com.music.bitchord.data.model.isMatchMissing
 import androidx.compose.ui.draw.alpha
-import androidx.compose.material3.CircularProgressIndicator
+import com.music.bitchord.ui.theme.ExpressiveButton
+import com.music.bitchord.ui.theme.ExpressiveButtonLabel
+import com.music.bitchord.ui.theme.ExpressiveButtonSize
+import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
 import com.music.bitchord.data.model.artworkAt
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.composed
@@ -557,9 +559,9 @@ private fun SongRowContent(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .matchParentSize()
-                        .clip(RoundedCornerShape(8.dp))
-                        .thumbnailBorder(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                        .clip(RoundedCornerShape(12.dp))
+                        .thumbnailBorder(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainer),
                 )
                 if (searchPlayingStyle && isCurrent && isPlaying) {
                     SearchPlayingBars(Modifier.align(Alignment.Center))
@@ -622,10 +624,10 @@ private fun SongRowContent(
         }
         if (matching) {
             Spacer(Modifier.width(8.dp))
-            CircularProgressIndicator(
-                modifier = Modifier.size(16.dp),
-                strokeWidth = 2.dp,
+            ExpressiveLoadingIndicator(
                 color = subtitleColor,
+                containerSize = 24.dp,
+                shapeSize = 16.dp,
             )
         } else {
             song.durationText?.let {
@@ -759,7 +761,7 @@ fun SearchPlayingBars(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .size(24.dp)
-            .clip(RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(10.dp))
             .background(Color.Black.copy(alpha = 0.52f)),
         contentAlignment = Alignment.Center,
     ) {
@@ -869,7 +871,7 @@ fun SignInBanner(
                 scaleX = scale
                 scaleY = scale
             }
-            .clip(RoundedCornerShape(22.dp))
+            .clip(RoundedCornerShape(28.dp))
             .clickable(interactionSource = interaction, indication = null, onClick = onSignIn),
     ) {
         // A card is a few hundred dp the reader is looking straight at, which
@@ -937,7 +939,11 @@ fun MessageState(
             textAlign = TextAlign.Center,
         )
         if (actionLabel != null && onAction != null) {
-            Button(onClick = onAction) { Text(actionLabel) }
+            // Expressive (branch material3-expressive): the empty-state
+            // action is a full Expressive button, not a classic M3 one.
+            ExpressiveButton(onClick = onAction, size = ExpressiveButtonSize.M) {
+                ExpressiveButtonLabel(actionLabel)
+            }
         }
     }
 }
@@ -947,7 +953,7 @@ fun MessageState(
  * `OutlinedTextField` — the same box the alerts and the search bar are built
  * from.
  *
- * Flat `surfaceVariant`, an 11dp radius, no outline and no floating label. A
+ * Flat `surfaceContainer`, a 20dp radius, no outline and no floating label. A
  * stock `OutlinedTextField` dropped onto one of these pages reads as a widget
  * borrowed from another app: it is the only thing on the screen wearing a
  * border, and its label reserves a band of empty space above every row it sits
@@ -966,11 +972,11 @@ fun PillTextField(
      *
      * The default is the fill the alerts want, since their frosted card is
      * `surface` and this sits on top of it. A field dropped into a settings
-     * card has to be told otherwise: those cards are *already* `surfaceVariant`
+     * card has to be told otherwise: those cards are *already* `surfaceContainer`
      * (see `SettingsGroup`), and a field the colour of the card it is in is a
      * field nobody can see.
      */
-    container: Color = MaterialTheme.colorScheme.surfaceVariant,
+    container: Color = MaterialTheme.colorScheme.surfaceContainer,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
@@ -978,7 +984,7 @@ fun PillTextField(
         modifier = modifier
             .fillMaxWidth()
             .height(40.dp)
-            .background(container, RoundedCornerShape(11.dp))
+            .background(container, RoundedCornerShape(20.dp))
             .padding(horizontal = 12.dp),
         contentAlignment = Alignment.CenterStart,
     ) {

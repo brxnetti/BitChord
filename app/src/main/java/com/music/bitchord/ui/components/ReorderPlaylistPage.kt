@@ -25,12 +25,12 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -134,10 +134,10 @@ fun ReorderPlaylistPage(
                 ),
             ) {
                 if (saving) {
-                    CircularProgressIndicator(
-                        strokeWidth = 2.dp,
+                    ExpressiveLoadingIndicator(
                         color = palette.onBackground,
-                        modifier = Modifier.size(16.dp),
+                        containerSize = 24.dp,
+                        shapeSize = 16.dp,
                     )
                 } else {
                     Text(stringResource(R.string.save_order))
@@ -153,10 +153,10 @@ fun ReorderPlaylistPage(
                     .height(200.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator(
-                    strokeWidth = 2.5.dp,
+                ExpressiveLoadingIndicator(
                     color = palette.onBackground,
-                    modifier = Modifier.size(26.dp),
+                    containerSize = 34.dp,
+                    shapeSize = 26.dp,
                 )
             }
 

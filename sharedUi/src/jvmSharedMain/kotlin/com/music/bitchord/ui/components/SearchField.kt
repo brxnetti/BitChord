@@ -78,10 +78,12 @@ fun SearchField(
                 if (LocalSearchFieldOnSurface.current) {
                     Modifier.fillMaxHeight()
                 } else {
-                    // Fixed height prevents the row from growing when text is entered
+                    // Expressive (branch material3-expressive): taller field,
+                    // 28dp corners, surface-container fill — the M3 Expressive
+                    // search bar, not a small rounded rect.
                     Modifier
-                        .height(46.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(11.dp))
+                        .height(56.dp)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(28.dp))
                 },
             )
             // Asymmetric: the magnifier is a button now and wants a real touch

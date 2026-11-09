@@ -35,17 +35,22 @@ import com.music.bitchord.ui.haptics.Haptic
 import com.music.bitchord.ui.haptics.rememberHaptics
 
 /**
- * The iOS 26 switch: a wide green capsule and a white pill of a thumb, which
+ * The iOS 26 switch: a wide capsule and a white pill of a thumb, which
  * stretches a little toward where it is going while pressed.
+ *
+ * Expressive (branch material3-expressive): the track is the theme's
+ * expressive primary when on — the iOS green is gone, so the switch reads
+ * in the app's own colour language — and the track is taller (32dp) with a
+ * bigger thumb, the Expressive switch's proportions. The mechanics are
+ * unchanged: plain drawing, haptics on flip, stretch toward the target.
  *
  * Plain drawing only — a track, a thumb, a shadow. Every settings page has a
  * column of these, and anything heavier per switch is paid that many times
  * over on every scroll frame.
  *
  * It takes Material3's `Switch` call shape so a settings row adopts it by name
- * alone. [thumbContent] and [colors] are accepted and ignored: on is iOS green
- * whatever the theme's accent — the one place the platform keeps its own
- * colour, and the reason it reads as a switch.
+ * alone. [thumbContent] and [colors] are accepted and ignored: on is the
+ * theme's primary whatever the theme's accent.
  *
  * A null [onCheckedChange] makes it a read-out, the way M3's does: the row
  * around it owns the tap.
@@ -80,10 +85,11 @@ fun IosSwitch(
         animationSpec = spring(dampingRatio = 0.7f, stiffness = 900f),
         label = "iosSwitchStretch",
     )
+    // Expressive primary, not iOS green — see the file header.
+    val primary = MaterialTheme.colorScheme.primary
     val track by animateColorAsState(
         targetValue = when {
-            checked && dark -> Color(0xFF30D158)
-            checked -> Color(0xFF34C759)
+            checked -> primary
             else -> Color(0xFF8E8E93).copy(alpha = if (dark) 0.36f else 0.22f)
         },
         label = "iosSwitchTrack",
@@ -139,7 +145,7 @@ fun IosSwitch(
 }
 
 private val TrackWidth = 64.dp
-private val TrackHeight = 28.dp
+private val TrackHeight = 32.dp
 private val ThumbWidth = 40.dp
-private val ThumbHeight = 24.dp
+private val ThumbHeight = 28.dp
 private val ThumbPadding = 2.dp

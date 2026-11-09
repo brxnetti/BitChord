@@ -21,10 +21,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Watch
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -174,7 +174,7 @@ private fun WatchRow(
         trailing = {
             when {
                 mine && update is WatchUpdateState.Sending || watch.status == WatchAppStatus.CHECKING ->
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                    ExpressiveLoadingIndicator(containerSize = 28.dp, shapeSize = 20.dp)
                 watch.status == WatchAppStatus.NOT_INSTALLED ->
                     ActionPill(stringResource(R.string.wear_os_install), onInstall)
                 watch.status == WatchAppStatus.UPDATE_AVAILABLE || watch.status == WatchAppStatus.UNKNOWN ->
@@ -305,7 +305,7 @@ private fun StatusLine(state: WatchPairingState) {
     }
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (spinning) {
-            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+            ExpressiveLoadingIndicator(containerSize = 24.dp, shapeSize = 16.dp)
             Spacer(Modifier.width(10.dp))
         } else if (state is WatchPairingState.Found || state is WatchPairingState.Installed) {
             Icon(

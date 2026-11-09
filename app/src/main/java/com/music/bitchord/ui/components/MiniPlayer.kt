@@ -23,7 +23,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -63,6 +62,8 @@ import com.music.bitchord.ui.haptics.Haptic
 import com.music.bitchord.ui.haptics.rememberHaptics
 import com.music.bitchord.playback.MusicOnlyPlayback
 import com.music.bitchord.ui.player.PlayerDock
+import com.music.bitchord.ui.theme.ExpressiveFilledIconButton
+import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
 import com.music.bitchord.ui.player.AndroidMusicVideo
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.layout.fillMaxSize
@@ -92,9 +93,6 @@ private val GLYPH_SLOT = 40.dp
  * still 4dp of clearance to the slot's edge on every side.
  */
 private val GLYPH_SIZE = 32.dp
-
-/** The spinner that stands in for the play glyph, kept in proportion to it. */
-private val SPINNER_SIZE = 22.dp
 
 /**
  * The gap between the two transport controls.
@@ -469,24 +467,30 @@ fun MiniPlayer(
             }
             if (isLoading) {
                 Box(Modifier.size(GLYPH_SLOT), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(
+                    ExpressiveLoadingIndicator(
                         color = MaterialTheme.colorScheme.onBackground,
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.size(SPINNER_SIZE),
+                        containerSize = 40.dp,
+                        shapeSize = 22.dp,
                     )
                 }
             } else {
-                IconButton(
+                // Expressive (branch material3-expressive): the play/pause
+                // glyph sits on a filled tonal disc, not a bare icon — the
+                // mini player's hero control.
+                ExpressiveFilledIconButton(
                     onClick = {
                         haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
                         onPlayPause()
                     },
-                    modifier = Modifier.size(GLYPH_SLOT),
+                    size = 48.dp,
+                    iconSize = 28.dp,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play),
                 ) {
                     Icon(
                         imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                        contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play),
-                        tint = MaterialTheme.colorScheme.onBackground,
+                        contentDescription = null,
                         modifier = Modifier.size(GLYPH_SIZE),
                     )
                 }

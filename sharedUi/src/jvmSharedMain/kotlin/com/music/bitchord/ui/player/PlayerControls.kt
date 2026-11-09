@@ -35,6 +35,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -66,7 +67,8 @@ import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Tv
 import androidx.compose.material.icons.rounded.Watch
-import androidx.compose.material3.CircularProgressIndicator
+import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
+import com.music.bitchord.ui.theme.ExpressiveMotion
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -473,8 +475,11 @@ internal fun TransportRow(
     onNext: () -> Unit,
     compact: Boolean = false,
 ) {
-    val playSize = if (compact) 58.dp else 74.dp
-    val playTouch = if (compact) 76.dp else 92.dp
+    // Expressive (branch material3-expressive): the play target is the M3
+    // Expressive L button size, 96dp — the transport's hero control — with a
+    // 112dp touch box. Landscape keeps a smaller 64dp target.
+    val playSize = if (compact) 64.dp else 96.dp
+    val playTouch = if (compact) 80.dp else 112.dp
     val skipSize = if (compact) 44.dp else PLAYER_SKIP_ICON_SIZE
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -495,12 +500,13 @@ internal fun TransportRow(
         )
         if (isLoading) {
             // Same footprint as the play/pause target — a smaller box here
-            // would shunt everything below it on every load.
+            // would shunt everything below it on every load. Expressive
+            // loading indicator in place of the stock spinner.
             Box(Modifier.size(playTouch), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(
+                ExpressiveLoadingIndicator(
                     color = Color.White,
-                    strokeWidth = 3.dp,
-                    modifier = Modifier.size(if (compact) 30.dp else 38.dp),
+                    containerSize = if (compact) 40.dp else 48.dp,
+                    shapeSize = if (compact) 30.dp else 38.dp,
                 )
             }
         } else {
@@ -845,7 +851,7 @@ private val PLAYER_SKIP_TOUCH_SIZE = 53.dp
  */
 private const val PLAYER_SKIP_HEIGHT_SCALE = 0.85f
 
-private val BOTTOM_ACTION_SIZE = 44.dp
+private val BOTTOM_ACTION_SIZE = 56.dp
 
 /** What the lyrics and queue glyphs are drawn at inside [BOTTOM_ACTION_SIZE]. */
 private val BOTTOM_ICON_SIZE = 26.dp
@@ -1076,15 +1082,28 @@ private fun PillSegment(
     val haptics = rememberHaptics()
     val lastTap = remember { mutableLongStateOf(-tapWindowMs) }
     val chrome = LocalPlayerChrome.current
+    // Expressive (branch material3-expressive): the pressed segment grows
+    // ~15% on a spring — the button-group flex — while its siblings hold.
+    val pressSource = remember { MutableInteractionSource() }
+    val pressed by pressSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (pressed) 1.15f else 1f,
+        animationSpec = ExpressiveMotion.press(),
+        label = "pillSegmentGrow",
+    )
     Box(
         modifier = Modifier
+            .graphicsLayer {
+                scaleX = pressScale
+                scaleY = pressScale
+            }
             .width(width)
             .height(BOTTOM_ACTION_SIZE)
             // Round the highlight and both fades, not inside them — see [CircleGlyph].
             .additiveChrome(chrome && !vibrant)
             .background(if (highlighted) Color.White.copy(alpha = 0.14f) else Color.Transparent)
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = pressSource,
                 indication = null,
                 enabled = !loading,
             ) {
@@ -1114,10 +1133,10 @@ private fun PillSegment(
             label = "pillSegmentLoading",
         ) { isLoading ->
             if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(17.dp),
+                ExpressiveLoadingIndicator(
                     color = Color.White,
-                    strokeWidth = 2.dp,
+                    containerSize = 24.dp,
+                    shapeSize = 17.dp,
                 )
             } else if (icon != null) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

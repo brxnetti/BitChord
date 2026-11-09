@@ -93,8 +93,10 @@ fun ThinSlider(
      * unplayed bar so the mix is visible before it arrives.
      */
     transitionWindow: ClosedFloatingPointRange<Float>? = null,
-    idleHeight: Dp = 7.dp,
-    activeHeight: Dp = 12.dp,
+    // Expressive (branch material3-expressive): a thicker bar — 10dp at rest,
+    // 16dp under the finger — so the scrubber reads as a control, not a hairline.
+    idleHeight: Dp = 10.dp,
+    activeHeight: Dp = 16.dp,
     activeColor: Color = Color.White.copy(alpha = 0.92f),
     inactiveColor: Color = Color.White.copy(alpha = 0.26f),
     /** Halfway between the two track colours: visible against unplayed, invisible under played. */

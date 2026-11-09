@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -148,10 +149,10 @@ private fun SongInfoRow(label: String, value: String?) {
         Spacer(Modifier.width(12.dp))
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
             if (value == null) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(14.dp),
+                ExpressiveLoadingIndicator(
                     color = onSurface.copy(alpha = 0.5f),
-                    strokeWidth = 1.75.dp,
+                    containerSize = 22.dp,
+                    shapeSize = 14.dp,
                 )
             } else {
                 Text(

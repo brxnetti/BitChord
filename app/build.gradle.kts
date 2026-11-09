@@ -292,7 +292,17 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
+    // Material 3 Expressive (branch material3-expressive): pinned above the
+    // BOM's 1.3.1 to the latest stable, 1.4.0 (verified on Google Maven
+    // 2026-11-09; 1.5.0 is still -rc01). Expressive's new components
+    // (ButtonGroup, SplitButton, LoadingIndicator) and MaterialExpressiveTheme
+    // are still `internal`/absent in stable 1.4.0 — verified against the
+    // published 1.4.0 sources jar — so this branch implements the Expressive
+    // design language (shapes, type scale, motion, component sizes) on the
+    // public 1.4.0 API surface instead of shipping an alpha Compose line.
+    // See M3X-NOTES.md. The pin matches sharedUi's JetBrains material3 1.9.0,
+    // whose Android artifact is androidx material3 1.4.0 (per its POM).
+    implementation("androidx.compose.material3:material3:1.4.0")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.navigation:navigation-compose:2.8.5")

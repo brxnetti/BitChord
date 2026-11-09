@@ -4842,7 +4842,7 @@ private fun BitChordApp(
                     // buttons below the fold — a sheet whose only two controls
                     // need a drag to reach.
                     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                    containerColor = MaterialTheme.colorScheme.background,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ) {
                     ReplayShareSheet(
                         summary = summary,
@@ -5253,7 +5253,7 @@ private fun BitChordApp(
             browseActions?.takeIf { browseRenameInSheet }?.let { target ->
                 ModalBottomSheet(
                     onDismissRequest = { browseActions = null },
-                    containerColor = MaterialTheme.colorScheme.background,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ) {
                     browseMenuBody(target)
                 }

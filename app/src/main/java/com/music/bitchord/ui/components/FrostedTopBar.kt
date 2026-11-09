@@ -41,6 +41,7 @@ import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
@@ -634,11 +635,10 @@ private fun RefreshPuck(refreshing: Boolean, pullFraction: () -> Float, modifier
         ) {
             val indicatorModifier = Modifier.size(22.dp)
             if (refreshing) {
-                CircularProgressIndicator(
-                    modifier = indicatorModifier,
+                ExpressiveLoadingIndicator(
                     color = MaterialTheme.colorScheme.primary,
-                    strokeWidth = 2.5.dp,
-                    strokeCap = StrokeCap.Round,
+                    containerSize = 30.dp,
+                    shapeSize = 22.dp,
                 )
             } else {
                 CircularProgressIndicator(

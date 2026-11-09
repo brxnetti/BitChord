@@ -27,9 +27,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import com.music.bitchord.ui.theme.ExpressiveFilledIconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -45,8 +45,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import org.jetbrains.compose.resources.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -210,8 +208,8 @@ internal fun LyricsOffsetSheet(
                         ThinSlider(
                             value = offsetToFraction(offsetMs),
                             onValueChange = { PlayerSettings.setLyricsOffsetMs(fractionToOffset(it)) },
-                            idleHeight = 6.dp,
-                            activeHeight = 10.dp,
+                            idleHeight = 8.dp,
+                            activeHeight = 14.dp,
                             modifier = Modifier.weight(1f),
                         )
                         OffsetButton(
@@ -250,15 +248,20 @@ private fun OffsetButton(
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
-    IconButton(
+    // Expressive (branch material3-expressive): the steppers are filled tonal
+    // discs, not bare glyphs.
+    ExpressiveFilledIconButton(
         onClick = onClick,
+        size = 48.dp,
+        iconSize = 24.dp,
+        containerColor = Color.White.copy(alpha = 0.12f),
+        contentColor = Color.White.copy(alpha = if (enabled) 0.85f else 0.25f),
         enabled = enabled,
-        modifier = Modifier.semantics { this.contentDescription = contentDescription },
+        contentDescription = contentDescription,
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.titleLarge,
-            color = Color.White.copy(alpha = if (enabled) 0.85f else 0.25f),
         )
     }
 }

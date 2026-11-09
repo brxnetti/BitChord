@@ -6,7 +6,11 @@ import com.music.bitchord.R
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -200,7 +204,7 @@ private const val SLEEVE_FRACTION = 0.76f
 /** ...and of its height, so a landscape window still shows the title under it. */
 private const val SLEEVE_MAX_HEIGHT = 0.5f
 
-private val SLEEVE_SHAPE = RoundedCornerShape(12.dp)
+private val SLEEVE_SHAPE = RoundedCornerShape(24.dp)
 private val SLEEVE_SHADOW = 18.dp
 
 /**
@@ -218,12 +222,12 @@ private const val FULL_BLEED_FADE_FRACTION = 0.42f
 private val FULL_BLEED_TITLE_OVERLAP = 44.dp
 
 /** Shuffle and Add to Library either side of the release page's Play pill. */
-private val RELEASE_SIDE_BUTTON = 50.dp
+private val RELEASE_SIDE_BUTTON = 56.dp
 private val RELEASE_ACTION_GAP = 14.dp
 
 /** Past this the Play pill stops growing, so a tablet doesn't get a bar. */
 private val RELEASE_ACTIONS_MAX_WIDTH = 420.dp
-private val PILL_SHAPE = RoundedCornerShape(12.dp)
+private val PILL_SHAPE = RoundedCornerShape(20.dp)
 
 /**
  * Where the search field sits once it is open — directly under the header,
@@ -1069,7 +1073,7 @@ private fun ReleaseHeader(
                         if (id == null || onArtistClick == null) {
                             m
                         } else {
-                            m.clip(RoundedCornerShape(6.dp))
+                            m.clip(RoundedCornerShape(10.dp))
                                 .clickable { onArtistClick(id, artist.artist) }
                         }
                     },
@@ -1659,10 +1663,23 @@ private fun ActionPill(
     // Resume rather than a flat tap: both start a queue, and the rising pair
     // says so.
     val haptics = rememberHaptics()
+    // Expressive (branch material3-expressive): the pill shrinks to 97% under
+    // the finger on a spring.
+    val pressSource = remember { MutableInteractionSource() }
+    val pressed by pressSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (pressed) 0.97f else 1f,
+        animationSpec = spring(dampingRatio = 0.65f, stiffness = 500f),
+        label = "actionPillPress",
+    )
     val content = if (filled) Color.Black else MaterialTheme.colorScheme.onSurface
     Row(
         modifier = modifier
             .height(size)
+            .graphicsLayer {
+                scaleX = pressScale
+                scaleY = pressScale
+            }
             .clip(CircleShape)
             .then(
                 if (filled) {
@@ -1674,7 +1691,10 @@ private fun ActionPill(
                         .border(1.dp, Color.White.copy(alpha = TOP_RELEASE_EDGE_ALPHA), CircleShape)
                 },
             )
-            .clickable {
+            .clickable(
+                interactionSource = pressSource,
+                indication = null,
+            ) {
                 haptics.play(Haptic.Resume)
                 onClick()
             }
@@ -1770,17 +1790,34 @@ private fun CircleIconButton(
     enabled: Boolean = true,
 ) {
     val haptics = rememberHaptics()
+    // Expressive (branch material3-expressive): same 97% spring press as
+    // the ActionPill beside it.
+    val pressSource = remember { MutableInteractionSource() }
+    val pressed by pressSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (pressed) 0.94f else 1f,
+        animationSpec = spring(dampingRatio = 0.65f, stiffness = 500f),
+        label = "circleButtonPress",
+    )
     Box(
         modifier = Modifier
             .size(size)
             .alpha(if (enabled) 1f else DISABLED_ACTION_ALPHA)
+            .graphicsLayer {
+                scaleX = pressScale
+                scaleY = pressScale
+            }
             .clip(CircleShape)
             .background(Color.White.copy(alpha = LIGHT_FILL_ALPHA), CircleShape)
             // The glass rim the floating bars wear, with Liquid Glass on. Rim
             // only: over the page's flat tint a blurred fill would look the same.
             .liquidGlassRim(CircleShape)
             .border(1.dp, Color.White.copy(alpha = TOP_RELEASE_EDGE_ALPHA), CircleShape)
-            .clickable(enabled = enabled) {
+            .clickable(
+                enabled = enabled,
+                interactionSource = pressSource,
+                indication = null,
+            ) {
                 haptics.play(haptic)
                 onClick()
             },
@@ -2061,8 +2098,8 @@ private fun CompactSongRow(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .matchParentSize()
-                    .clip(RoundedCornerShape(7.dp))
-                    .thumbnailBorder(RoundedCornerShape(7.dp))
+                    .clip(RoundedCornerShape(12.dp))
+                    .thumbnailBorder(RoundedCornerShape(12.dp))
                     .background(palette.elevated),
             )
             if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
@@ -2125,8 +2162,8 @@ private fun SuggestedSongRow(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .matchParentSize()
-                    .clip(RoundedCornerShape(8.dp))
-                    .thumbnailBorder(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(12.dp))
+                    .thumbnailBorder(RoundedCornerShape(12.dp))
                     .background(palette.elevated),
             )
             if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
@@ -2368,8 +2405,8 @@ private fun SectionCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .clip(RoundedCornerShape(10.dp))
-                .thumbnailBorder(RoundedCornerShape(10.dp))
+                .clip(RoundedCornerShape(16.dp))
+                .thumbnailBorder(RoundedCornerShape(16.dp))
                 .background(palette.elevated),
         )
         Spacer(Modifier.height(8.dp))

@@ -554,7 +554,7 @@ private class DockFrame {
 private class LandscapeDockPose(val left: Float, val top: Float, val scale: Float)
 
 /** The placeholder tile's corners — one shape, not a new one every frame it moves. */
-private val TileShape = RoundedCornerShape(8.dp)
+private val TileShape = RoundedCornerShape(16.dp)
 
 /**
  * [content], for as long as [shown] says so.
@@ -3164,7 +3164,10 @@ fun NowPlayingScreen(
                         // it docks.
                         fun sleeveShown(): Float = bannerShown() * dockT()
                         fun sleeveCorner(): Dp {
-                            val corner = 8.dp * (1f - sleeveShown())
+                            // Expressive (branch material3-expressive): the
+                            // full player's sleeve is a 20dp hero container,
+                            // dissolving to the mini player's corner as it docks.
+                            val corner = 20.dp * (1f - sleeveShown())
                             val t = dockT()
                             return if (dock == null || t >= 1f) corner else lerp(dock.miniArtCorner(), corner, t)
                         }
@@ -3582,7 +3585,7 @@ fun NowPlayingScreen(
                                         VideoLoadingBackdrop(
                                             Modifier
                                                 .fillMaxSize()
-                                                .clip(RoundedCornerShape(10.dp)),
+                                                .clip(RoundedCornerShape(16.dp)),
                                         )
                                     }
                                     MusicVideoSurface(
@@ -3591,7 +3594,7 @@ fun NowPlayingScreen(
                                         onRenderedChanged = { videoRendered = it },
                                         modifier = Modifier
                                             .fillMaxSize()
-                                            .clip(RoundedCornerShape(10.dp)),
+                                            .clip(RoundedCornerShape(16.dp)),
                                     )
                                     VideoCornerControls(
                                         fullscreen = false,

@@ -24,8 +24,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
@@ -69,10 +67,13 @@ fun PillSegmentedControl(
     val density = LocalDensity.current
     val style = MaterialTheme.typography.labelMedium
     val measurer = rememberTextMeasurer()
-    val light = MaterialTheme.colorScheme.surface.luminance() > 0.5f
-    val trackColor = TRACK_FILL.copy(alpha = if (light) LIGHT_TRACK_ALPHA else DARK_TRACK_ALPHA)
-    val pillColor = if (light) Color.White else DARK_PILL
-    val labelColor = if (light) Color.Black else Color.White
+    // Expressive (branch material3-expressive): the track is the theme's
+    // surface-container, the selected segment the primary container — the
+    // selection reads in the app's colour language, not Apple's grey.
+    val trackColor = MaterialTheme.colorScheme.surfaceContainerHigh
+    val pillColor = MaterialTheme.colorScheme.primaryContainer
+    val selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
     val reduceAnimation by PlayerSettings.reduceAnimation.collectAsStateWithLifecycle()
     val selected = selectedIndex.takeIf { it in options.indices }
 
@@ -176,7 +177,7 @@ fun PillSegmentedControl(
                         Text(
                             text = label,
                             style = style,
-                            color = labelColor,
+                            color = if (index == selected) selectedLabelColor else labelColor,
                             maxLines = 1,
                             softWrap = false,
                         )
@@ -196,17 +197,9 @@ private fun Modifier.atX(x: Float): Modifier = layout { measurable, constraints 
 private val TrackShape = SquirclePillShape()
 private val PillShape = SquirclePillShape()
 
-/** Apple's tertiary fill: a grey at a quarter on dark and an eighth on light. */
-private val TRACK_FILL = Color(0xFF767680)
-private const val DARK_TRACK_ALPHA = 0.24f
-private const val LIGHT_TRACK_ALPHA = 0.12f
-
-/** The selected segment on dark, Apple's lifted grey; on light it is white. */
-private val DARK_PILL = Color(0xFF636366)
-
 private val TRACK_PADDING = 4.dp
 /** Air either side of a label: past this a segment reads as a word, not a cramped tab. */
 private val LABEL_PADDING = 18.dp
-private val LABEL_VERTICAL_PADDING = 9.dp
+private val LABEL_VERTICAL_PADDING = 11.dp
 private val EDGE_FADE = 28.dp
 private const val PILL_DAMPING = 0.8f

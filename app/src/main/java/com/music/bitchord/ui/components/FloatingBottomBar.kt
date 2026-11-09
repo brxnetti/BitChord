@@ -115,7 +115,7 @@ private val GESTURE_BAR_FLOOR = 15.dp
  * numbers are a pair: change one and the bar's height moves unless the other
  * moves against it.
  */
-internal val TAB_VERTICAL_PADDING = 6.5.dp
+internal val TAB_VERTICAL_PADDING = 10.dp
 
 /** The gap between a tab's glyph and its label, in both bars. */
 internal val TAB_ICON_LABEL_GAP = 1.dp
@@ -284,7 +284,9 @@ fun FloatingBottomBar(
                         scaleY = 1f - lag * STRETCH * SQUASH
                     }
                     .clip(pillShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
+                    // Expressive (branch material3-expressive): the selected
+                    // tab sits on a solid tonal pill, not a 14% wash.
+                    .background(MaterialTheme.colorScheme.primaryContainer),
             )
         }
 

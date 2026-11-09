@@ -43,8 +43,11 @@ import androidx.compose.ui.unit.dp
 /** How long one highlight sweep takes to cross a placeholder. */
 private const val SHIMMER_PERIOD_MS = 1400
 
-private val BlockShape = RoundedCornerShape(6.dp)
-private val LineShape = RoundedCornerShape(4.dp)
+// Expressive (branch material3-expressive): placeholders share the
+// expressive radii — blocks 12dp, lines 8dp — so the skeleton already reads
+// as the cards that will replace it.
+private val BlockShape = RoundedCornerShape(12.dp)
+private val LineShape = RoundedCornerShape(8.dp)
 
 // Ragged widths, so a run of rows reads as text rather than as a barcode.
 private val TitleWidths = listOf(0.68f, 0.46f, 0.58f, 0.74f, 0.52f)
@@ -59,7 +62,7 @@ private val SubtitleWidths = listOf(0.34f, 0.44f, 0.27f, 0.38f, 0.31f)
  */
 @Composable
 fun ShimmerBox(modifier: Modifier = Modifier, shape: Shape = BlockShape) {
-    val base = MaterialTheme.colorScheme.surfaceVariant
+    val base = MaterialTheme.colorScheme.surfaceContainer
     val highlight = MaterialTheme.colorScheme.onSurfaceVariant
         .copy(alpha = 0.16f)
         .compositeOver(base)
@@ -190,7 +193,7 @@ private fun RecentsHeaderSkeleton() {
  * shelf's is — which is the whole point of a skeleton.
  */
 @Composable
-fun ShelfSkeleton(index: Int = 0, cardWidth: Dp = SHELF_CARD_WIDTH, cardCorner: Dp = 12.dp) {
+fun ShelfSkeleton(index: Int = 0, cardWidth: Dp = SHELF_CARD_WIDTH, cardCorner: Dp = 20.dp) {
     Column(Modifier.padding(bottom = 26.dp)) {
         SectionHeaderSkeleton(index = index)
         LazyRow(
@@ -309,7 +312,7 @@ fun LazyListScope.detailSkeleton(isArtist: Boolean) {
         }
         item(key = "skeleton:detail:sections") {
             Box(Modifier.graphicsLayer { alpha = 0.4f }) {
-                ShelfSkeleton(index = 2, cardCorner = 10.dp)
+                ShelfSkeleton(index = 2, cardCorner = 20.dp)
             }
         }
         return

@@ -19,10 +19,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -140,10 +140,10 @@ fun AccountChannelDialog(
                 )
                 if (loading && channels.isEmpty()) {
                     Spacer(Modifier.padding(top = 12.dp))
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(22.dp),
-                        strokeWidth = 2.dp,
+                    ExpressiveLoadingIndicator(
                         color = MaterialTheme.colorScheme.primary,
+                        containerSize = 30.dp,
+                        shapeSize = 22.dp,
                     )
                 }
             }
