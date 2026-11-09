@@ -180,7 +180,8 @@ android {
              * `benchmark` build type below before it ships.
              */
             isMinifyEnabled = true
-            isShrinkResources = true
+            // OFF: the resource shrinker strips Compose Multiplatform string resources (only referenced by key, e.g. shelf_recents) and tools:keep in keep.xml had no effect in AGP 9.1.1 (run 12); the app crashed on launch when the Home feed rendered. R8 code shrinking stays on.
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
