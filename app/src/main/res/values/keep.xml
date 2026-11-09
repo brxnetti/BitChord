@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Protege los recursos de Compose Multiplatform del shrinker de recursos.
+     Los strings y arrays de sharedUi se leen por clave ("string:shelf_recents"),
+     no por R.string.* ni @string/*, así que el shrinker no ve la referencia
+     y los borra en la build de release. Sin esto la app se cierra al cargar
+     el Home, cuando intenta mostrar el título de la primera sección
+     (cierre al abrir, 2026-11-09). -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@string/*,@array/*" />
