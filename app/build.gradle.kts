@@ -116,17 +116,6 @@ android {
         }
     }
 
-    // The phone <-> watch protocol, one file shared with the watch app so the
-    // two cannot drift. See wearos/protocol/.../WearProtocol.kt.
-    // AGP 9.1.1: srcDir() is deprecated and no longer registers the dir;
-    // the replacement is the `directories` mutable set of path strings.
-    // Relative strings did NOT take (run 42672443562: WearProtocol still
-    // unresolved in WearBridge.kt) — absolute paths, resolved against this
-    // module, so there is no ambiguity about the base.
-    sourceSets {
-        getByName("main") { java.directories.add(file("../wearos/protocol").absolutePath) }
-    }
-
     externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
@@ -576,5 +565,20 @@ if (providers.gradleProperty("bitchord.bundleWear").orNull != "false" && findPro
             apks.from(rootProject.layout.projectDirectory.dir("wearos/build/outputs/apk/$flavor/$type"))
         }
         variant.sources.assets?.addGeneratedSourceDirectory(bundle, BundleWearApk::outputDir)
+    }
+}
+// The phone <-> watch protocol, one file shared with the watch app so the
+// two cannot drift. See wearos/protocol/.../WearProtocol.kt.
+// AGP 9.1.1: neither srcDir() nor the `directories` set registers this dir
+// for Kotlin compilation (runs 42671163263, 42672443562, 42674395107 all
+// failed with WearProtocol unresolved, identical error counts). The supported
+// way is the Variant Sources API (same pattern already used for the wear APK
+// bundle below). NOTE: androidComponents lives at the top level of the
+// script, not inside android {}.
+androidComponents {
+    onVariants { variant ->
+        val protocolDir = file("../wearos/protocol").absolutePath
+        variant.sources.java?.addStaticSourceDirectory(protocolDir)
+        variant.sources.kotlin?.addStaticSourceDirectory(protocolDir)
     }
 }

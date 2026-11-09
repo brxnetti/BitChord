@@ -126,17 +126,6 @@ android {
      *   - src/main/AndroidManifest.xml: TV's own — LEANBACK_LAUNCHER, TvActivity.
      */
     sourceSets {
-        // AGP 9.1.1: srcDir() is deprecated and no longer registers the dir;
-        // the replacement is the `directories` mutable set of path strings.
-        // Absolute paths, resolved against this module (relative strings did
-        // not take in app/wearos, run 42672443562).
-        getByName("main") {
-            java.directories.add(file("../app/src/main/java").absolutePath)
-            res.directories.add(file("../app/src/main/res").absolutePath)
-            assets.directories.add(file("../app/src/main/assets").absolutePath)
-            jniLibs.directories.add(file("../app/src/main/jniLibs").absolutePath)
-        }
-        getByName("debug") { java.directories.add(file("../app/src/debug/java").absolutePath) }
         // Created later by the "dev" flavor below, so picked up when it appears.
         configureEach { if (name == "dev") manifest.srcFile("src/dev/AndroidManifest.xml") }
     }
@@ -514,5 +503,25 @@ val replacedByTv: Set<String> = fileTree(tvJava) { include("**/*.kt") }.files
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     exclude { el ->
         el.file.startsWith(phoneJava) && el.relativePath.pathString in replacedByTv
+    }
+}
+// The TV app builds from the phone app's sources (see the comment above the
+// sourceSets block). AGP 9.1.1: neither srcDir() nor the `directories` set
+// registers these dirs for compilation (see the protocol fix in app/wearos).
+// The supported way is the Variant Sources API. NOTE: androidComponents lives
+// at the top level of the script, not inside android {}.
+androidComponents {
+    onVariants { variant ->
+        val appMain = file("../app/src/main").absolutePath
+        variant.sources.java?.addStaticSourceDirectory("$appMain/java")
+        variant.sources.kotlin?.addStaticSourceDirectory("$appMain/java")
+        variant.sources.res?.addStaticSourceDirectory("$appMain/res")
+        variant.sources.assets?.addStaticSourceDirectory("$appMain/assets")
+        variant.sources.jniLibs?.addStaticSourceDirectory("$appMain/jniLibs")
+        if (variant.buildType == "debug") {
+            val debugJava = file("../app/src/debug/java").absolutePath
+            variant.sources.java?.addStaticSourceDirectory(debugJava)
+            variant.sources.kotlin?.addStaticSourceDirectory(debugJava)
+        }
     }
 }

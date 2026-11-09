@@ -4680,15 +4680,15 @@ private fun BitChordApp(
                 // the stock ones the hidden overload used.
                 saver = SheetState.Saver(
                     enabledValues = setOf(SheetValue.Expanded, SheetValue.Hidden),
-                    positionalThreshold = { with(sheetDensity) { BottomSheetDefaults.PositionalThreshold.toPx() } },
-                    velocityThreshold = { with(sheetDensity) { BottomSheetDefaults.VelocityThreshold.toPx() } },
+                    positionalThreshold = { with(sheetDensity) { 56.dp.toPx() } },
+                    velocityThreshold = { with(sheetDensity) { 125.dp.toPx() } },
                     confirmValueChange = confirmSheetValue,
                 ),
             ) {
                 SheetState(
                     enabledValues = setOf(SheetValue.Expanded, SheetValue.Hidden),
-                    positionalThreshold = { with(sheetDensity) { BottomSheetDefaults.PositionalThreshold.toPx() } },
-                    velocityThreshold = { with(sheetDensity) { BottomSheetDefaults.VelocityThreshold.toPx() } },
+                    positionalThreshold = { with(sheetDensity) { 56.dp.toPx() } },
+                    velocityThreshold = { with(sheetDensity) { 125.dp.toPx() } },
                     // Already open when the app is the one raising it: its
                     // content is held down, and slid up, by the motion.
                     initialValue = if (playerSheetMotion.holding) SheetValue.Expanded else SheetValue.Hidden,

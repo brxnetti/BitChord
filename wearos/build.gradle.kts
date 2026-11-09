@@ -45,16 +45,6 @@ android {
         versionName = rootProject.extra["bitchordVersionName"] as String
     }
 
-    sourceSets {
-        // The phone <-> watch protocol, shared with :app. See WearProtocol.
-        // AGP 9.1.1: srcDir() is deprecated and no longer registers the dir
-        // (run 42671163263: WearProtocol unresolved); the replacement is the
-        // `directories` mutable set of path strings. Relative strings did NOT
-        // take (run 42672443562: still unresolved) — absolute paths, resolved
-        // against this module, so there is no ambiguity about the base.
-        getByName("main") { java.directories.add(file("protocol").absolutePath) }
-    }
-
     flavorDimensions += "env"
     productFlavors {
         create("dev") {
@@ -170,4 +160,18 @@ dependencies {
     // Lets a sideloaded install use the baseline profiles Compose ships with,
     // instead of starting every screen interpreted.
     implementation("androidx.profileinstaller:profileinstaller:1.4.1")
+}
+
+// The phone <-> watch protocol, shared with :app. See WearProtocol.
+// AGP 9.1.1: neither srcDir() nor the `directories` set registers this
+// dir for Kotlin compilation (runs 42671163263, 42672443562, 42674395107
+// all failed with WearProtocol unresolved, identical error counts).
+// The supported way is the Variant Sources API (same pattern app/ already
+// uses for the wear APK bundle below).
+androidComponents {
+    onVariants { variant ->
+        val protocolDir = file("protocol").absolutePath
+        variant.sources.java?.addStaticSourceDirectory(protocolDir)
+        variant.sources.kotlin?.addStaticSourceDirectory(protocolDir)
+    }
 }
