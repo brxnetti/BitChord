@@ -33,7 +33,7 @@ val betaSuffix = rootProject.extra["bitchordBetaSuffix"] as String
 
 android {
     namespace = "com.music.bitchord.wear"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.music.bitchord"
@@ -49,8 +49,10 @@ android {
         // The phone <-> watch protocol, shared with :app. See WearProtocol.
         // AGP 9.1.1: srcDir() is deprecated and no longer registers the dir
         // (run 42671163263: WearProtocol unresolved); the replacement is the
-        // `directories` mutable set of path strings.
-        getByName("main") { java.directories.add("protocol") }
+        // `directories` mutable set of path strings. Relative strings did NOT
+        // take (run 42672443562: still unresolved) — absolute paths, resolved
+        // against this module, so there is no ambiguity about the base.
+        getByName("main") { java.directories.add(file("protocol").absolutePath) }
     }
 
     flavorDimensions += "env"

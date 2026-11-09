@@ -120,8 +120,11 @@ android {
     // two cannot drift. See wearos/protocol/.../WearProtocol.kt.
     // AGP 9.1.1: srcDir() is deprecated and no longer registers the dir;
     // the replacement is the `directories` mutable set of path strings.
+    // Relative strings did NOT take (run 42672443562: WearProtocol still
+    // unresolved in WearBridge.kt) — absolute paths, resolved against this
+    // module, so there is no ambiguity about the base.
     sourceSets {
-        getByName("main") { java.directories.add("../wearos/protocol") }
+        getByName("main") { java.directories.add(file("../wearos/protocol").absolutePath) }
     }
 
     externalNativeBuild {

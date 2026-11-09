@@ -14,7 +14,9 @@ kotlin {
     // and minSdk live in kotlin { android { ... } }.
     android {
         namespace = "com.music.bitchord.shared"
-        compileSdk = 36
+        // Material 3 Expressive: innertubex-android v0.7.0 (dep de sharedUi)
+        // exige compileSdk 37+; app/ y tv/ ya están en 37.
+        compileSdk = 37
         minSdk = 26
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)

@@ -80,7 +80,10 @@ kotlin {
     // and minSdk live in kotlin { android { ... } }.
     android {
         namespace = "com.music.bitchord.sharedui"
-        compileSdk = 36
+        // Material 3 Expressive: innertubex-android v0.7.0 exige compileSdk
+        // 37+ (checkAndroidMainAarMetadata, run 42672443562); app/ y tv/ ya
+        // están en 37.
+        compileSdk = 37
         minSdk = 26
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)

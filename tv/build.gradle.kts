@@ -128,13 +128,15 @@ android {
     sourceSets {
         // AGP 9.1.1: srcDir() is deprecated and no longer registers the dir;
         // the replacement is the `directories` mutable set of path strings.
+        // Absolute paths, resolved against this module (relative strings did
+        // not take in app/wearos, run 42672443562).
         getByName("main") {
-            java.directories.add("../app/src/main/java")
-            res.directories.add("../app/src/main/res")
-            assets.directories.add("../app/src/main/assets")
-            jniLibs.directories.add("../app/src/main/jniLibs")
+            java.directories.add(file("../app/src/main/java").absolutePath)
+            res.directories.add(file("../app/src/main/res").absolutePath)
+            assets.directories.add(file("../app/src/main/assets").absolutePath)
+            jniLibs.directories.add(file("../app/src/main/jniLibs").absolutePath)
         }
-        getByName("debug") { java.directories.add("../app/src/debug/java") }
+        getByName("debug") { java.directories.add(file("../app/src/debug/java").absolutePath) }
         // Created later by the "dev" flavor below, so picked up when it appears.
         configureEach { if (name == "dev") manifest.srcFile("src/dev/AndroidManifest.xml") }
     }

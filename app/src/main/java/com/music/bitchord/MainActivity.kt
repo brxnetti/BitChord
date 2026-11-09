@@ -4672,16 +4672,23 @@ private fun BitChordApp(
                 }
             }
             val nowPlayingSheetState = rememberSaveable(
+                // Material 3 1.5.0: SheetState.Saver / SheetState now take the
+                // set of enabled values plus explicit thresholds; the old
+                // skipPartiallyExpanded/density/skipHiddenState overloads are
+                // hidden (DeprecationLevel.HIDDEN). Same behaviour as before:
+                // no partially-expanded state, hidden allowed. Thresholds are
+                // the stock ones the hidden overload used.
                 saver = SheetState.Saver(
-                    skipPartiallyExpanded = true,
+                    enabledValues = setOf(SheetValue.Expanded, SheetValue.Hidden),
+                    positionalThreshold = { with(sheetDensity) { BottomSheetDefaults.PositionalThreshold.toPx() } },
+                    velocityThreshold = { with(sheetDensity) { BottomSheetDefaults.VelocityThreshold.toPx() } },
                     confirmValueChange = confirmSheetValue,
-                    density = sheetDensity,
-                    skipHiddenState = false,
                 ),
             ) {
                 SheetState(
-                    skipPartiallyExpanded = true,
-                    density = sheetDensity,
+                    enabledValues = setOf(SheetValue.Expanded, SheetValue.Hidden),
+                    positionalThreshold = { with(sheetDensity) { BottomSheetDefaults.PositionalThreshold.toPx() } },
+                    velocityThreshold = { with(sheetDensity) { BottomSheetDefaults.VelocityThreshold.toPx() } },
                     // Already open when the app is the one raising it: its
                     // content is held down, and slid up, by the motion.
                     initialValue = if (playerSheetMotion.holding) SheetValue.Expanded else SheetValue.Hidden,

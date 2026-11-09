@@ -2,7 +2,6 @@ package com.music.bitchord
 
 import android.app.Application
 import androidx.annotation.OptIn
-import androidx.compose.ui.ComposeUiFlags
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.media3.common.util.UnstableApi
 import coil3.ImageLoader
@@ -90,7 +89,10 @@ class BitChordApplication : Application(), SingletonImageLoader.Factory, Configu
         // minutes, two stack traces built on the main thread per frame. The app
         // asks for its refresh rate itself (MainActivity.applyPerformanceMode),
         // so those votes buy nothing — and they kept resetting that request.
-        ComposeUiFlags.isAdaptiveRefreshRateEnabled = false
+        // (Material 3 Expressive: ComposeUiFlags.isAdaptiveRefreshRateEnabled
+        // was a temporary flag and is gone in Compose 1.12.0 — the adaptive
+        // refresh-rate behaviour is now always on, so there is nothing to
+        // switch off here anymore.)
         // The Spotify library and import live in the shared module; the tokens are the WebView's.
         SpotifyLibrary.auth = SpotifyLibrary.Auth {
             SpotifyToken.accessToken()?.let { SpotifyLibrary.Tokens(it, SpotifyToken.clientToken()) }
