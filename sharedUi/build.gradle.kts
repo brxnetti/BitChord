@@ -9,14 +9,40 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
  * depending on this module never moves the phone's Compose underneath it. The
  * desktop resolves its own newer versions over these at the top of its graph.
  *
- * Material 3 Expressive (branch material3-expressive): JetBrains material3
- * 1.9.0 is the latest stable (verified on Maven Central 2026-11-09) and its
- * Android artifact is androidx material3 1.4.0 (per the published POM), which
- * is also what the phone app pins directly — one Expressive API surface for
- * both modules. Stable 1.4.0 keeps MaterialExpressiveTheme / ButtonGroup /
- * SplitButton / LoadingIndicator internal or absent (verified against the
- * published sources jar), so the Expressive components live in this module's
- * ui/theme/Expressive.kt, built on the public 1.4.0 API. See M3X-NOTES.md.
+ * Material 3 Expressive ALPHA (branch material3-expressive, orden de
+ * Alejandro 2026-11-09): JetBrains material3 1.11.0-alpha07 is the newest
+ * JetBrains line that still wraps androidx material3 on Android — its
+ * android variant depends on androidx material3 1.5.0-alpha17 (verified in
+ * its published Gradle module metadata 2026-11-09). JetBrains 1.12+/1.13+
+ * no longer declare any androidx material3 dependency on Android (they ship
+ * their own implementation of the package), so using them here would put two
+ * copies of androidx.compose.material3 on the phone's classpath — duplicate
+ * classes at dex time. There is NO JetBrains version wrapping androidx
+ * 1.5.0-beta/rc; alpha17 is the newest wrapped one. The phone app pins
+ * androidx material3 1.5.0-rc01 directly, so Gradle resolves androidx
+ * material3 to rc01 everywhere at runtime; this module compiles against the
+ * alpha17-level API, which already has the full Expressive set public
+ * (MaterialExpressiveTheme, ButtonGroup, SplitButtonLayout, LoadingIndicator,
+ * MotionScheme.expressive() — verified against the published
+ * 1.5.0-alpha17 sources jar and JetBrains 1.11.0-alpha07 sources jar).
+ * The alpha17 APIs are @ExperimentalMaterial3ExpressiveApi, hence the
+ * file-level @OptIn in ui/theme/Expressive.kt.
+ *
+ * FIX 2026-11-09: material-icons-extended is pinned back to 1.7.3 — version
+ * 1.9.0 does NOT exist (404 on Maven Central, verified; the directory
+ * listing ends at 1.7.3 and there is no 1.11.0-alpha07 of it either), so the
+ * previous bump to 1.9.0 would have failed dependency resolution in Actions.
+ * Icons are stable API; Gradle resolves material3 itself to 1.11.0-alpha07.
+ *
+ * Cost of the alpha (honest): JetBrains 1.11.0-alpha07 pulls compose
+ * runtime/foundation/ui 1.11.0-beta03 transitively, so those resolve above
+ * this module's $cmp = 1.10.3 while the compose compiler plugin stays
+ * 1.10.3, and kotlin-stdlib resolves to the project's 2.3.20 (above the
+ * 2.2.20 the alpha was built against). If Actions fails on a version
+ * conflict here, the fallback is sharedUi back to JetBrains 1.9.0
+ * (androidx 1.4.0) with the app alone on 1.5.0-rc01 — the Expressive
+ * wrappers in this module would then go back to their custom
+ * implementations. See M3X-NOTES.md.
  *
  * The pin is the *Android* anchor only. On the JVM it is a floor, not a
  * ceiling — and there it matters which version compiles this module, because
@@ -80,8 +106,8 @@ kotlin {
             api("org.jetbrains.compose.foundation:foundation:$cmp")
             api("org.jetbrains.compose.animation:animation:$cmp")
             api("org.jetbrains.compose.ui:ui:$cmp")
-            api("org.jetbrains.compose.material3:material3:1.9.0")
-            api("org.jetbrains.compose.material:material-icons-extended:1.9.0")
+            api("org.jetbrains.compose.material3:material3:1.11.0-alpha07")
+            api("org.jetbrains.compose.material:material-icons-extended:1.7.3")
             api("org.jetbrains.compose.components:components-resources:$cmp")
             api("org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose:2.8.4")
             api("io.coil-kt.coil3:coil-compose:3.0.4")

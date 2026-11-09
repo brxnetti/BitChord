@@ -3,7 +3,8 @@ package com.music.bitchord.ui.theme
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -23,20 +24,25 @@ import com.music.bitchord.R
 import com.music.bitchord.data.settings.AppFont
 
 /*
- * Material 3 Expressive theme (branch material3-expressive).
+ * Material 3 Expressive theme (branch material3-expressive, ALPHA por orden
+ * de Alejandro 2026-11-09).
  *
- * Stable androidx material3 1.4.0 keeps MaterialExpressiveTheme,
- * MotionScheme.expressive() and the expressive colour schemes `internal`
- * (verified against the published 1.4.0 sources jar; the full component set
- * only goes public in the 1.5.0-alpha line), so this file is the Expressive
- * theme by hand, on the public API: a complete expressive colour scheme
- * (seeded from the app's own red rather than the stock purple, with the full
- * surface-container tier), the expressive shape scale, and the expressive
- * type scale — bigger, heavier display type and more open body text. The
- * matching component set (ExpressiveButton, ExpressiveButtonGroup,
- * ExpressiveSplitButton, ExpressiveLoadingIndicator, ExpressiveSlider,
- * expressive motion springs) lives in sharedUi's ui/theme/Expressive.kt.
- * See M3X-NOTES.md for what stable 1.4.0 does and does not provide.
+ * androidx material3 1.5.0-rc01 (verified on Google Maven 2026-11-09; 1.5.0
+ * final does not exist yet) makes the Expressive set public:
+ * MaterialExpressiveTheme, MotionScheme.expressive() and the expressive
+ * colour schemes are public and no longer experimental in rc01 (verified
+ * against the published 1.5.0-rc01 sources jar). This file now calls the
+ * STOCK theme with the app's own seeded scheme — the same red-seeded
+ * DarkColors/LightColors, expressive shape scale and expressive type scale
+ * as before — instead of hand-rolling Expressive on top of MaterialTheme.
+ * The stock theme supplies the expressive motion scheme and marks the
+ * hierarchy as expressive (LocalUsingExpressiveTheme), which is what makes
+ * stock components (Button morphing shapes, Slider, Switch, dialogs) behave
+ * expressively on their own. The matching stock component set
+ * (ExpressiveButton on ButtonDefaults.shapesFor, ExpressiveButtonGroup on
+ * ButtonGroup, ExpressiveSplitButton on SplitButtonLayout,
+ * ExpressiveLoadingIndicator on LoadingIndicator) lives in sharedUi's
+ * ui/theme/Expressive.kt. See M3X-NOTES.md.
  */
 
 // Apple Music's signature red. No longer the primary accent, but kept for the
@@ -250,10 +256,13 @@ private fun Typography.withFamily(family: FontFamily) = Typography(
 )
 
 /**
- * The app's theme, now Material 3 Expressive: expressive colour scheme,
- * expressive shapes and expressive type, through the public
- * [MaterialTheme] — the only theme call site in the app, so every screen
- * inherits it. Kept under the old name and signature so no call site moves.
+ * The app's theme, now Material 3 Expressive on the STOCK theme: the same
+ * seeded expressive colour scheme, expressive shapes and expressive type as
+ * before, plus the stock expressive motion scheme — through
+ * [MaterialExpressiveTheme], which also marks the hierarchy as expressive so
+ * stock components morph and spring on their own. The only theme call site
+ * in the app, so every screen inherits it. Kept under the old name and
+ * signature so no call site moves.
  */
 @Composable
 fun BitChordTheme(
@@ -261,8 +270,9 @@ fun BitChordTheme(
     font: AppFont = AppFont.DEFAULT,
     content: @Composable () -> Unit,
 ) {
-    MaterialTheme(
+    MaterialExpressiveTheme(
         colorScheme = if (darkTheme) DarkColors else LightColors,
+        motionScheme = MotionScheme.expressive(),
         shapes = BitChordExpressiveShapes,
         typography = when (font) {
             AppFont.DEFAULT -> BitChordTypography

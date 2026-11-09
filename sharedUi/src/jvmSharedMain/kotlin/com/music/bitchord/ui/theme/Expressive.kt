@@ -1,26 +1,17 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 package com.music.bitchord.ui.theme
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -31,16 +22,24 @@ import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonGroup
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ButtonGroupMenuState
+import androidx.compose.material3.ButtonGroupScope
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderColors
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.SplitButtonDefaults
+import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -49,10 +48,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.contentDescription
@@ -62,25 +57,32 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 
 /*
- * Material 3 Expressive components (branch material3-expressive).
+ * Material 3 Expressive components (branch material3-expressive, ALPHA por
+ * orden de Alejandro 2026-11-09).
  *
- * Stable androidx material3 1.4.0 — the latest stable, verified on Google
- * Maven 2026-11-09 — keeps the Expressive component set internal or absent:
- * MaterialExpressiveTheme, MotionScheme.expressive() and
- * expressiveLightColorScheme() are `internal`, and ButtonGroup, SplitButton
- * and LoadingIndicator have no public composable at all (only design tokens).
- * Those APIs go public in the 1.5.0-alpha line, which this app does not ship:
- * an alpha Compose line under a music player that must keep playing is the
- * wrong trade, and the JetBrains multiplatform material3 this module compiles
- * against has no stable mapping to it either.
+ * This module compiles against JetBrains material3 1.11.0-alpha07, which
+ * wraps androidx material3 1.5.0-alpha17 on Android (the newest JetBrains
+ * line that still wraps androidx — 1.12+ ships its own copy of the package).
+ * In alpha17 the full Expressive set is already public (verified against
+ * the published 1.5.0-alpha17 sources jar and the JetBrains 1.11.0-alpha07
+ * sources jar — same file, same line numbers): MaterialExpressiveTheme,
+ * ButtonGroup, SplitButtonLayout, LoadingIndicator, MotionScheme.expressive()
+ * and expressiveLightColorScheme(). They are @ExperimentalMaterial3ExpressiveApi
+ * in alpha17 (in 1.5.0-rc01, which the phone app pins, the theme and the
+ * groups are already stabilised), hence the file-level @OptIn above.
  *
- * So the Expressive components are built here, on the public 1.4.0 API, to
- * the M3 Expressive spec: five button sizes (XS 32 / S 40 / M 56 / L 96 /
- * XL 136dp), corners that morph one step smaller under the finger, segments
- * that grow ~15% on press, a shape-morphing loading indicator, a 28dp slider
- * thumb, and spring motion throughout. When 1.5.0 goes stable these wrappers
- * are the seam to swap the stock components in behind — call sites already
- * speak Expressive.
+ * So the four components that were hand-built on stable 1.4.0 are now the
+ * STOCK ones, behind the same wrapper names — call sites do not move:
+ * ExpressiveButton rides ButtonDefaults.shapesFor/contentPaddingFor (the
+ * stock size-aware morphing shapes; XS 32dp is now a real stock size),
+ * ExpressiveButtonGroup is the stock ButtonGroup, ExpressiveSplitButton is
+ * the stock SplitButtonLayout, ExpressiveLoadingIndicator is the stock
+ * LoadingIndicator (48dp container, 38dp morphing shape — the spec numbers
+ * the hand-drawn version used). The rest was already stock-based and stays:
+ * AssistChip, Slider (+ SliderDefaults.Thumb), Card, FilledIconButton,
+ * Switch. ExpressiveMotion / expressivePress stay as app-level motion glue
+ * (there is no stock equivalent for the press-scale modifier); the stock
+ * motion scheme itself comes from the theme (MotionScheme.expressive()).
  */
 
 /** Expressive motion: springs, not durations. Bouncy for presses, standard for layout. */
@@ -117,19 +119,27 @@ fun Modifier.expressivePress(
     }
 }
 
-/** The five Expressive button sizes, heights per the M3 Expressive spec. */
-enum class ExpressiveButtonSize(val height: Dp, val contentPadding: PaddingValues) {
-    XS(32.dp, PaddingValues(horizontal = 12.dp)),
-    S(40.dp, PaddingValues(horizontal = 16.dp)),
-    M(56.dp, PaddingValues(horizontal = 24.dp)),
-    L(96.dp, PaddingValues(horizontal = 32.dp)),
-    XL(136.dp, PaddingValues(horizontal = 40.dp)),
+/**
+ * The five Expressive button sizes, heights per the M3 Expressive spec —
+ * and per the stock tokens (ButtonXSmallTokens 32 / Small 40 / Medium 56 /
+ * Large 96 / XLarge 136dp). Padding and pressed shapes now come from the
+ * stock [ButtonDefaults.contentPaddingFor] / [ButtonDefaults.shapesFor].
+ */
+enum class ExpressiveButtonSize(val height: Dp) {
+    XS(32.dp),
+    S(40.dp),
+    M(56.dp),
+    L(96.dp),
+    XL(136.dp),
 }
 
 /**
- * An Expressive button: one of the five sizes, fully rounded, corners that
- * morph tighter under the finger, spring press scale. Filled by default;
- * pass [colors] for tonal / outlined / text variants.
+ * An Expressive button: one of the five sizes, on the STOCK Button with the
+ * stock size-aware shapes ([ButtonDefaults.shapesFor] morphs shape to
+ * pressed shape on its own) and size-aware padding
+ * ([ButtonDefaults.contentPaddingFor]). Filled by default; pass [colors]
+ * for tonal / outlined / text variants. Keeps the app's spring press scale
+ * on top of the stock shape morph.
  */
 @Composable
 fun ExpressiveButton(
@@ -142,12 +152,6 @@ fun ExpressiveButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
-    // Corners morph one step smaller while pressed, per the spec.
-    val corner by animateDpAsState(
-        targetValue = if (pressed) (size.height / 4) else (size.height / 2),
-        animationSpec = ExpressiveMotion.press(),
-        label = "expressiveButtonCorner",
-    )
     val pressScale by animateFloatAsState(
         targetValue = if (pressed) 0.97f else 1f,
         animationSpec = ExpressiveMotion.press(),
@@ -155,6 +159,7 @@ fun ExpressiveButton(
     )
     Button(
         onClick = onClick,
+        shapes = ButtonDefaults.shapesFor(size.height),
         modifier = modifier
             .height(size.height)
             .graphicsLayer {
@@ -162,114 +167,43 @@ fun ExpressiveButton(
                 scaleY = pressScale
             },
         enabled = enabled,
-        shape = RoundedCornerShape(corner),
         colors = colors,
-        contentPadding = size.contentPadding,
+        contentPadding = ButtonDefaults.contentPaddingFor(size.height),
         interactionSource = interactionSource,
         content = content,
     )
 }
 
 /**
- * An Expressive button group: 2–5 related actions joined into one connected
- * cluster, the canonical Expressive control. Segments share edges (2dp gap),
- * the ends stay round and the joins square, and the pressed segment grows
- * ~15% on a spring while its siblings hold — the flex that says "group"
- * rather than "row of buttons".
+ * An Expressive button group: the STOCK [ButtonGroup], thinly wrapped so
+ * call sites keep speaking Expressive. Segments register with
+ * [ButtonGroupScope.clickableItem] / [toggleableItem] / [customItem] and
+ * grow on press via [ButtonGroupScope.animateWidth]; overflow goes through
+ * [ButtonGroupDefaults.OverflowIndicator] unless the caller supplies its own.
+ * Previously a hand-built Row of buttons (stable 1.4.0 had no public
+ * ButtonGroup); the stock group now owns the connected shapes, the
+ * press-grow and the overflow menu.
  */
 @Composable
 fun ExpressiveButtonGroup(
     modifier: Modifier = Modifier,
-    size: ExpressiveButtonSize = ExpressiveButtonSize.M,
-    content: @Composable ExpressiveButtonGroupScope.() -> Unit,
+    overflowIndicator: @Composable (ButtonGroupMenuState) -> Unit =
+        { ButtonGroupDefaults.OverflowIndicator(it) },
+    content: ButtonGroupScope.() -> Unit,
 ) {
-    // Fresh scope per composition: the content lambda appends segments, so a
-    // remembered scope would grow one copy per recomposition.
-    val scope = ExpressiveButtonGroupScope()
-    scope.content()
-    Row(modifier = modifier.height(size.height)) {
-        scope.segments.forEachIndexed { index, segment ->
-            ExpressiveButtonGroupSegment(
-                segment = segment,
-                size = size,
-                isFirst = index == 0,
-                isLast = index == scope.segments.lastIndex,
-            )
-        }
-    }
-}
-
-@Composable
-private fun ExpressiveButtonGroupSegment(
-    segment: ExpressiveButtonSegment,
-    size: ExpressiveButtonSize,
-    isFirst: Boolean,
-    isLast: Boolean,
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    val grow by animateFloatAsState(
-        targetValue = if (pressed) 1.15f else 1f,
-        animationSpec = ExpressiveMotion.press(),
-        label = "buttonGroupGrow",
+    ButtonGroup(
+        overflowIndicator = overflowIndicator,
+        modifier = modifier,
+        content = content,
     )
-    val shape = RoundedCornerShape(
-        topStart = if (isFirst) size.height / 2 else 4.dp,
-        bottomStart = if (isFirst) size.height / 2 else 4.dp,
-        topEnd = if (isLast) size.height / 2 else 4.dp,
-        bottomEnd = if (isLast) size.height / 2 else 4.dp,
-    )
-    Box(
-        modifier = Modifier
-            .weight(segment.weight)
-            .height(size.height)
-            .graphicsLayer {
-                scaleX = grow
-                scaleY = grow
-            }
-            .padding(end = if (isLast) 0.dp else 2.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Button(
-            onClick = segment.onClick,
-            modifier = Modifier.height(size.height),
-            enabled = segment.enabled,
-            shape = shape,
-            colors = segment.colors ?: ButtonDefaults.buttonColors(),
-            contentPadding = size.contentPadding,
-            interactionSource = interactionSource,
-        ) {
-            segment.content(this)
-        }
-    }
 }
-
-class ExpressiveButtonGroupScope {
-    internal val segments = mutableListOf<ExpressiveButtonSegment>()
-    fun segment(
-        onClick: () -> Unit,
-        enabled: Boolean = true,
-        colors: ButtonColors? = null,
-        weight: Float = 1f,
-        content: @Composable RowScope.() -> Unit,
-    ) {
-        segments.add(ExpressiveButtonSegment(onClick, enabled, colors, weight, content))
-    }
-}
-
-internal data class ExpressiveButtonSegment(
-    val onClick: () -> Unit,
-    val enabled: Boolean,
-    val colors: ButtonColors?,
-    val weight: Float,
-    val content: @Composable RowScope.() -> Unit,
-)
 
 /**
- * An Expressive split button: a leading action plus an attached dropdown
- * trigger, joined like a button group. The chevron spins 180° as the menu
- * opens. [onMenuClick] fires the trailing half; [expanded] drives the
- * chevron.
+ * An Expressive split button: the STOCK [SplitButtonLayout] with
+ * [SplitButtonDefaults.LeadingButton] / [TrailingButton], shapes and padding
+ * sized from [size] ([SplitButtonDefaults.leadingButtonShapesFor] and
+ * friends). The chevron spins 180° as the menu opens. [onMenuClick] fires
+ * the trailing half; [expanded] drives the chevron.
  */
 @Composable
 fun ExpressiveSplitButton(
@@ -287,53 +221,45 @@ fun ExpressiveSplitButton(
         animationSpec = ExpressiveMotion.layout(),
         label = "splitButtonChevron",
     )
-    Row(modifier = modifier.height(size.height)) {
-        Button(
-            onClick = onClick,
-            modifier = Modifier
-                .weight(1f)
-                .height(size.height),
-            enabled = enabled,
-            shape = RoundedCornerShape(
-                topStart = size.height / 2,
-                bottomStart = size.height / 2,
-                topEnd = 4.dp,
-                bottomEnd = 4.dp,
-            ),
-            colors = colors,
-            contentPadding = size.contentPadding,
-        ) {
-            leadingContent()
-        }
-        Box(Modifier.width(2.dp))
-        Button(
-            onClick = onMenuClick,
-            modifier = Modifier.height(size.height),
-            enabled = enabled,
-            shape = RoundedCornerShape(
-                topStart = 4.dp,
-                bottomStart = 4.dp,
-                topEnd = size.height / 2,
-                bottomEnd = size.height / 2,
-            ),
-            colors = colors,
-            contentPadding = PaddingValues(horizontal = 12.dp),
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.KeyboardArrowDown,
-                contentDescription = null,
-                modifier = Modifier.graphicsLayer { rotationZ = chevronRotation },
-            )
-        }
-    }
+    SplitButtonLayout(
+        leadingButton = {
+            SplitButtonDefaults.LeadingButton(
+                onClick = onClick,
+                enabled = enabled,
+                shapes = SplitButtonDefaults.leadingButtonShapesFor(size.height),
+                colors = colors,
+                contentPadding = SplitButtonDefaults.leadingButtonContentPaddingFor(size.height),
+            ) { leadingContent() }
+        },
+        trailingButton = {
+            SplitButtonDefaults.TrailingButton(
+                onClick = onMenuClick,
+                enabled = enabled,
+                shapes = SplitButtonDefaults.trailingButtonShapesFor(size.height),
+                colors = colors,
+                contentPadding = SplitButtonDefaults.trailingButtonContentPaddingFor(size.height),
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.KeyboardArrowDown,
+                    contentDescription = null,
+                    modifier = Modifier.graphicsLayer { rotationZ = chevronRotation },
+                )
+            }
+        },
+        modifier = modifier.height(size.height),
+    )
 }
 
 /**
- * The Expressive loading indicator: the stock spinner's replacement. A shape
- * that morphs between circle, squircle and blob while it turns, in a 48dp
- * container with a 38dp active shape — the M3 Expressive spec numbers. Use
- * wherever a wait has no measurable fraction; determinate progress keeps its
- * own linear indicator.
+ * The Expressive loading indicator: the STOCK [LoadingIndicator]. It morphs
+ * circle -> squircle -> blob on its own, in its 48dp container with a 38dp
+ * active shape — the spec numbers the hand-drawn Canvas version used. The
+ * stock indicator always lays out at 48dp (its ContainerWidth/Height
+ * tokens), so the smaller call sites (24/28/32dp) are kept by scaling the
+ * drawing inside a box of the requested size. [shapeSize] is kept for
+ * call-site compatibility and matches the stock 38dp active shape.
+ * Use wherever a wait has no measurable fraction; determinate progress keeps
+ * its own linear indicator.
  */
 @Composable
 fun ExpressiveLoadingIndicator(
@@ -342,61 +268,21 @@ fun ExpressiveLoadingIndicator(
     containerSize: Dp = 48.dp,
     shapeSize: Dp = 38.dp,
 ) {
-    val transition = rememberInfiniteTransition(label = "expressiveLoading")
-    val rotation by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(tween(durationMillis = 1600)),
-        label = "loadingRotation",
-    )
-    // Corner radius breathes circle -> squircle -> almost-square, one morph
-    // per half turn, so the shape never sits still long enough to read as a
-    // static icon.
-    val cornerFraction by transition.animateFloat(
-        initialValue = 0.5f,
-        targetValue = 0.14f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 800),
-            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse,
-        ),
-        label = "loadingCorner",
-    )
-    val pulse by transition.animateFloat(
-        initialValue = 0.92f,
-        targetValue = 1.08f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 800),
-            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse,
-        ),
-        label = "loadingPulse",
-    )
+    // Stock lays out 48dp no matter the incoming modifier; scale the drawing
+    // for the smaller call sites instead of fighting its size. Vector path,
+    // so the scale stays crisp.
+    val scale = (containerSize / 48.dp).coerceIn(0.25f, 1.5f)
     Box(
         modifier = modifier.size(containerSize),
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(
-            Modifier
-                .size(shapeSize)
-                .graphicsLayer {
-                    rotationZ = rotation
-                    scaleX = pulse
-                    scaleY = pulse
-                },
-        ) {
-            val radius = size.minDimension * cornerFraction
-            drawRoundRect(
-                color = color,
-                cornerRadius = CornerRadius(radius, radius),
-            )
-            // A lighter core, so the morph reads as a shape turning rather
-            // than a solid block spinning.
-            drawRoundRect(
-                color = Color.White.copy(alpha = 0.22f),
-                topLeft = Offset(size.width * 0.22f, size.height * 0.22f),
-                size = Size(size.width * 0.56f, size.height * 0.56f),
-                cornerRadius = CornerRadius(radius * 0.7f, radius * 0.7f),
-            )
-        }
+        LoadingIndicator(
+            modifier = Modifier.graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            },
+            color = color,
+        )
     }
 }
 

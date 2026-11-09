@@ -292,17 +292,20 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    // Material 3 Expressive (branch material3-expressive): pinned above the
-    // BOM's 1.3.1 to the latest stable, 1.4.0 (verified on Google Maven
-    // 2026-11-09; 1.5.0 is still -rc01). Expressive's new components
-    // (ButtonGroup, SplitButton, LoadingIndicator) and MaterialExpressiveTheme
-    // are still `internal`/absent in stable 1.4.0 — verified against the
-    // published 1.4.0 sources jar — so this branch implements the Expressive
-    // design language (shapes, type scale, motion, component sizes) on the
-    // public 1.4.0 API surface instead of shipping an alpha Compose line.
-    // See M3X-NOTES.md. The pin matches sharedUi's JetBrains material3 1.9.0,
-    // whose Android artifact is androidx material3 1.4.0 (per its POM).
-    implementation("androidx.compose.material3:material3:1.4.0")
+    // Material 3 Expressive ALPHA (branch material3-expressive, orden de
+    // Alejandro 2026-11-09): pinned above the BOM's 1.3.1 to the latest
+    // pre-release, 1.5.0-rc01 (verified on Google Maven 2026-11-09; 1.5.0
+    // final does NOT exist yet). In rc01 the Expressive set is public:
+    // MaterialExpressiveTheme, MotionScheme.expressive() and
+    // expressiveLightColorScheme() are public and no longer experimental;
+    // ButtonGroup, SplitButtonLayout and FloatingToolbar are public;
+    // LoadingIndicator is public but @ExperimentalMaterial3ExpressiveApi.
+    // Verified against the published 1.5.0-rc01 sources jar (not from memory).
+    // sharedUi stays on JetBrains material3 1.11.0-alpha07 (see its
+    // build.gradle.kts), which wraps androidx 1.5.0-alpha17 — the newest
+    // JetBrains line that still wraps androidx on Android — so the app
+    // resolves androidx material3 to this rc01 everywhere.
+    implementation("androidx.compose.material3:material3:1.5.0-rc01")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.navigation:navigation-compose:2.8.5")
