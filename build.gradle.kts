@@ -1,37 +1,14 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
-buildscript {
-    repositories {
-        google()
-    }
-    dependencies {
-        /*
-         * Overrides the D8/R8 that AGP 8.10.1 bundles (8.10.9). Gradle's conflict
-         * resolution picks the higher version, so this is the whole mechanism.
-         *
-         * 8.10.x miscompiles `NowPlayingScreen`, which is large enough — 36
-         * parameters, ~5,500 dex instructions, registers past v287 — to hit a
-         * register-allocation bug in debug-mode dexing. Resolving phis at one of
-         * the join points emits `const/16 v29, #int 48` over the register already
-         * holding the `MeshPalette` from `rememberArtworkColors`, and the
-         * `MeshGradientBackground` call downstream then reads it back as a
-         * reference:
-         *
-         *   [0x116d] copy-reference v16<-v29 type=PositiveByteConstant
-         *
-         * ART's verifier rejects the whole class for that, so the dev build died
-         * with a VerifyError the moment the player composed. The JVM bytecode
-         * kotlinc produces is valid — the fault is entirely in the dex lowering,
-         * and it is fixed as of 8.11.32. 8.13.x is the newest 8.x line, and also
-         * the first to read Kotlin 2.3 @Metadata: 8.10.9 caps out at 2.2.0 and
-         * warns "malformed kotlin.Metadata" on every class this project compiles.
-         *
-         * Only debug dexing is affected — release-mode allocation keeps the
-         * palette in place, which is why prod builds were fine and only dev
-         * crashed. Removable once AGP itself bundles something past 8.11.32.
-         */
-        classpath("com.android.tools:r8:8.13.23")
-    }
-}
+/*
+ * R8 override REMOVED (branch material3-expressive, AGP bump 2026-11-09):
+ * it used to pin R8 to 8.13.23 because AGP 8.10.1 bundled R8 8.10.9, which
+ * miscompiled `NowPlayingScreen` in debug dexing (VerifyError, see the old
+ * comment) and could not read Kotlin 2.3 @Metadata. The override's own note
+ * said it was removable once AGP bundled something past 8.11.32 — AGP 9.1.1
+ * bundles R8 9.1.x, so the override is gone and the bundled R8 applies.
+ * If a VerifyError on NowPlayingScreen ever comes back in a dev build, this
+ * is the first place to look.
+ */
 /*
  * The version of the phone app and of the watch app that ships inside it, in
  * one place. The watch has to move with the phone: it is installed and updated
@@ -65,9 +42,23 @@ extra["bitchordVersionName"] = "1.9.1"
  */
 extra["bitchordBetaSuffix"] = ""
 
+/*
+ * AGP 9.1.1 (branch material3-expressive, 2026-11-09): the Material 3 alpha
+ * (1.5.0-rc01) and Compose 1.12.0 AARs require AGP 9.1.0+, and the app's
+ * compileSdk 37 needs AGP 9.1.1 as its documented minimum — so 9.1.1 is the
+ * smallest version that satisfies both, not 9.1.0. It in turn requires
+ * Gradle 9.3.1 (see gradle-wrapper.properties) and JDK 17 (workflow already
+ * uses 17). Kotlin stays 2.3.20 and Compose Multiplatform stays 1.10.3:
+ * Kotlin's own docs list KGP 2.3.20 as fully supported only up to AGP 9.0.0
+ * and Gradle 9.3.0, but the same docs say newer AGP/Gradle versions "usually
+ * work" with possible deprecation warnings — bumping Kotlin to 2.4.x would
+ * force a CMP bump and re-open the JetBrains material3 mapping, so the
+ * minimal AGP-only bump goes first and the build will tell us if KGP
+ * complains. See M3X-NOTES.md §11.
+ */
 plugins {
-    id("com.android.application") version "8.10.1" apply false
-    id("com.android.library") version "8.10.1" apply false
+    id("com.android.application") version "9.1.1" apply false
+    id("com.android.library") version "9.1.1" apply false
     id("org.jetbrains.kotlin.android") version "2.3.20" apply false
     id("org.jetbrains.kotlin.multiplatform") version "2.3.20" apply false
     id("org.jetbrains.kotlin.jvm") version "2.3.20" apply false
