@@ -2,7 +2,6 @@ package com.music.bitchord.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.indication.LocalIndication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
@@ -113,9 +112,9 @@ fun Modifier.longPressMenuClickable(
      * Shared with the press feedback that wraps the item (see
      * `ExpressiveShelfCard` / `Modifier.expressivePress`): the scale and
      * the corner morph run on the same press the menu fires from, and the
-     * ripple stays — the indication is still [LocalIndication], exactly
-     * what the bare overload passes. Defaults to a fresh source, so
-     * existing call sites behave as before.
+     * ripple stays — the overload without an indication argument already
+     * uses the theme default, exactly what the bare overload passes.
+     * Defaults to a fresh source, so existing call sites behave as before.
      */
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ): Modifier {
@@ -152,7 +151,6 @@ fun Modifier.longPressMenuClickable(
         .onPlaced { capture.coordinates = it }
         .combinedClickable(
             interactionSource = interactionSource,
-            indication = LocalIndication.current,
             enabled = enabled,
             onClick = onClick,
             onLongClick = longClick,
