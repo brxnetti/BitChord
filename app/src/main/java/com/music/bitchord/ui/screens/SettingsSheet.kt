@@ -1936,6 +1936,7 @@ fun SettingsScreen(
                     onValueChange = { tokenInput = it },
                     label = { Text(stringResource(R.string.api_token)) },
                     singleLine = true,
+                    shape = MaterialTheme.shapes.large,
                     modifier = Modifier.fillMaxWidth(),
                 )
             },
@@ -1978,6 +1979,7 @@ fun SettingsScreen(
                         onValueChange = { usernameInput = it },
                         label = { Text(stringResource(R.string.username)) },
                         singleLine = true,
+                        shape = MaterialTheme.shapes.large,
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(Modifier.height(8.dp))
@@ -1986,6 +1988,7 @@ fun SettingsScreen(
                         onValueChange = { passwordInput = it },
                         label = { Text(stringResource(R.string.password)) },
                         singleLine = true,
+                        shape = MaterialTheme.shapes.large,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }

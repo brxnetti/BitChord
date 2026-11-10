@@ -15,16 +15,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import org.jetbrains.compose.resources.painterResource
 import com.music.bitchord.sharedui.resources.spotify_logo
 import com.music.bitchord.sharedui.resources.Res
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.music.bitchord.ui.theme.ExpressiveButton
+import com.music.bitchord.ui.theme.ExpressiveButtonSize
 import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -110,11 +110,11 @@ fun SpotifyLibraryScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(Modifier.height(16.dp))
-                    Button(onClick = onOpenLogin) {
+                    ExpressiveButton(onClick = onOpenLogin, size = ExpressiveButtonSize.S) {
                         Text(stringResource(R.string.spotify_sign_in))
                     }
                     Spacer(Modifier.height(8.dp))
-                    OutlinedButton(onClick = onOpenTokenSetup) {
+                    ExpressiveButton(onClick = onOpenTokenSetup, size = ExpressiveButtonSize.S, colors = ButtonDefaults.outlinedButtonColors()) {
                         Text(stringResource(R.string.spotify_use_spdc_token))
                     }
                 }

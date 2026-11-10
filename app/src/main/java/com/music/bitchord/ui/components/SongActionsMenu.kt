@@ -25,7 +25,7 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.music.bitchord.ui.theme.ExpressiveIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
@@ -52,8 +52,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import com.music.bitchord.ui.player.ThinSlider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -683,7 +681,7 @@ private fun SleepTimerHeader(title: String, subtitle: String, onBack: () -> Unit
             .padding(start = 8.dp, end = 22.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = onBack) {
+        ExpressiveIconButton(onClick = onBack) {
             Icon(
                 SfIcons.ArrowBack,
                 contentDescription = stringResource(R.string.back),
@@ -787,10 +785,10 @@ private fun StepButton(
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
-    IconButton(
+    ExpressiveIconButton(
         onClick = onClick,
         enabled = enabled,
-        modifier = Modifier.semantics { this.contentDescription = contentDescription },
+        contentDescription = contentDescription,
     ) {
         Text(
             text = label,
@@ -960,8 +958,8 @@ internal fun SheetTrackHeader(
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .trackArtSize(52.dp, song.isVideo)
-                .clip(RoundedCornerShape(8.dp))
-                .thumbnailBorder(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(12.dp))
+                .thumbnailBorder(RoundedCornerShape(12.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant),
         )
         Spacer(Modifier.width(14.dp))

@@ -36,7 +36,7 @@ import com.music.bitchord.ui.icons.SfIcons
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.music.bitchord.ui.theme.ExpressiveIconButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -301,7 +301,7 @@ fun FrostedTopBar(
                             .padding(start = BAR_GUTTER),
                     )
                 } else {
-                    IconButton(
+                    ExpressiveIconButton(
                         onClick = onBack,
                         modifier = Modifier.align(Alignment.CenterStart).padding(start = 4.dp),
                     ) {
@@ -363,7 +363,7 @@ private fun ArtworkPageBackButton(
         MaterialTheme.colorScheme.onSurface
     }
 
-    IconButton(
+    ExpressiveIconButton(
         onClick = onClick,
         modifier = modifier
             .size(TOP_CONTROL_SIZE)
@@ -535,7 +535,7 @@ fun TopBarAccountButton(
     val scope = rememberCoroutineScope()
     // Wrapped in an IconButton so it keeps the touch target, the ripple and the
     // spacing every other action in this bar has.
-    IconButton(
+    ExpressiveIconButton(
         onClick = onClick,
         modifier = modifier
             .graphicsLayer { translationY = translation.value }

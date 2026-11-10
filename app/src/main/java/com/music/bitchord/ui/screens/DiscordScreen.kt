@@ -521,7 +521,7 @@ private fun NoticeCard(text: String, onDismiss: () -> Unit) {
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .align(Alignment.End)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .clickable(onClick = onDismiss)
                     .padding(horizontal = 8.dp, vertical = 10.dp),
             )
@@ -565,7 +565,7 @@ private fun RichPresencePreview(
         Spacer(Modifier.height(12.dp))
 
         Row(verticalAlignment = Alignment.Top) {
-            val artShape = RoundedCornerShape(6.dp)
+            val artShape = RoundedCornerShape(12.dp)
             if (song?.thumbnailUrl != null) {
                 AsyncImage(
                     model = song.artworkAt(CARD_ART_PX),
@@ -656,7 +656,7 @@ private fun PresenceButton(label: String, enabled: Boolean, onClick: () -> Unit)
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.outline.copy(alpha = if (enabled) 0.9f else 0.4f))
             .clickable(enabled = enabled, onClick = onClick)
             .padding(vertical = 9.dp),

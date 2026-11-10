@@ -20,17 +20,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.music.bitchord.ui.theme.ExpressiveButton
+import com.music.bitchord.ui.theme.ExpressiveButtonSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -224,11 +223,11 @@ internal fun PartyLanding(
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(28.dp))
-        Button(
+        ExpressiveButton(
             onClick = onCreate,
             enabled = enabled,
-            shape = RoundedCornerShape(percent = 50),
-            modifier = Modifier.fillMaxWidth().height(52.dp),
+            size = ExpressiveButtonSize.M,
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
                 text = stringResource(R.string.listen_together_create_action),
@@ -237,10 +236,12 @@ internal fun PartyLanding(
             )
         }
         Spacer(Modifier.height(6.dp))
-        TextButton(
+        ExpressiveButton(
             onClick = onJoin,
             enabled = enabled,
-            modifier = Modifier.fillMaxWidth().height(48.dp),
+            size = ExpressiveButtonSize.S,
+            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
                 text = stringResource(R.string.listen_together_join_existing),
@@ -367,11 +368,11 @@ internal fun CreatePartySheet(
             }
         }
         Spacer(Modifier.height(24.dp))
-        Button(
+        ExpressiveButton(
             onClick = onCreate,
             enabled = enabled && !busy,
-            shape = RoundedCornerShape(percent = 50),
-            modifier = Modifier.fillMaxWidth().height(52.dp),
+            size = ExpressiveButtonSize.M,
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
                 text = stringResource(
@@ -388,7 +389,12 @@ internal fun CreatePartySheet(
 
 @Composable
 private fun StepperButton(label: String, enabled: Boolean, onClick: () -> Unit) {
-    TextButton(onClick = onClick, enabled = enabled) {
+    ExpressiveButton(
+        onClick = onClick,
+        enabled = enabled,
+        size = ExpressiveButtonSize.S,
+        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+    ) {
         Text(label, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
     }
 }
@@ -451,11 +457,11 @@ internal fun JoinPartySheet(
             onSubmit = onSubmit,
         )
         Spacer(Modifier.height(20.dp))
-        Button(
+        ExpressiveButton(
             onClick = onSubmit,
             enabled = enabled && !busy && code.length == ListenTogether.CODE_LENGTH,
-            shape = RoundedCornerShape(percent = 50),
-            modifier = Modifier.fillMaxWidth().height(52.dp),
+            size = ExpressiveButtonSize.M,
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
                 text = stringResource(
@@ -609,11 +615,11 @@ internal fun JoinConfirmSheet(
             )
         }
         Spacer(Modifier.height(20.dp))
-        Button(
+        ExpressiveButton(
             onClick = onJoin,
             enabled = !busy && !preview.isFull,
-            shape = RoundedCornerShape(percent = 50),
-            modifier = Modifier.fillMaxWidth().height(52.dp),
+            size = ExpressiveButtonSize.M,
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
                 text = stringResource(
@@ -629,9 +635,11 @@ internal fun JoinConfirmSheet(
         }
         SheetError(error)
         Spacer(Modifier.height(4.dp))
-        TextButton(
+        ExpressiveButton(
             onClick = onDismiss,
-            modifier = Modifier.fillMaxWidth().height(48.dp),
+            size = ExpressiveButtonSize.S,
+            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
                 text = stringResource(R.string.listen_together_not_now),
@@ -671,10 +679,10 @@ internal fun InviteSheet(
     ) {
         SheetHeader(title = stringResource(R.string.listen_together_invite_title))
         Spacer(Modifier.height(20.dp))
-        Button(
+        ExpressiveButton(
             onClick = onShareLink,
-            shape = RoundedCornerShape(percent = 50),
-            modifier = Modifier.fillMaxWidth().height(52.dp),
+            size = ExpressiveButtonSize.M,
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Icon(Icons.Rounded.Link, contentDescription = null, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
@@ -706,9 +714,10 @@ internal fun InviteSheet(
                 // somebody on the phone the party was made on — reading six
                 // characters out is still the fastest way into a party in the
                 // same room.
-                TextButton(
+                ExpressiveButton(
                     onClick = onCopyCode,
-                    contentPadding = ButtonDefaults.TextButtonWithIconContentPadding,
+                    size = ExpressiveButtonSize.S,
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary),
                     modifier = Modifier.offset(x = (-12).dp),
                 ) {
                     Text(

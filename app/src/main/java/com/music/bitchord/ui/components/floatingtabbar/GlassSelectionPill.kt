@@ -14,7 +14,7 @@ package com.music.bitchord.ui.components.floatingtabbar
 import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -503,7 +503,9 @@ internal fun FlatSelectionPill(
     color: Color,
     modifier: Modifier,
 ) {
-    val shape = remember { RoundedCornerShape(percent = 50) }
+    // Expressive (branch material3-expressive): the selection pill is a
+    // 24dp squircle, not a full pill — the M3E indicator shape.
+    val shape = MaterialTheme.shapes.large
     Box(modifier.background(color, shape))
 }
 
@@ -530,7 +532,10 @@ internal fun GlassSelectionPill(
     modifier: Modifier,
 ) {
     val page = LocalAppBackdrop.current
-    val shape = remember { RoundedCornerShape(percent = 50) }
+    // Expressive (branch material3-expressive): the selection pill is a
+    // 24dp squircle, not a full pill — the M3E indicator shape. The lens,
+    // rim and shadow below all follow this shape.
+    val shape = MaterialTheme.shapes.large
     val glassPerformance by AppSettings.glassPerformance.collectAsStateWithLifecycle()
     val backdrop = remember(page, barGlass, tabRow, fillColor, glassPerformance) {
         SelectionPillBackdrop(page, barGlass, tabRow) {

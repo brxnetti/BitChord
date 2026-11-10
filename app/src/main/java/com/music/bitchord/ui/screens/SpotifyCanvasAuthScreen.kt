@@ -9,14 +9,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import com.music.bitchord.ui.icons.SfIcons
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import com.music.bitchord.ui.components.IosSwitch
+import com.music.bitchord.ui.theme.ExpressiveButton
+import com.music.bitchord.ui.theme.ExpressiveButtonSize
+import com.music.bitchord.ui.theme.ExpressiveIconButton
 import com.music.bitchord.ui.theme.stableStatusBarInsets
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -48,7 +49,7 @@ fun SpotifyCanvasAuthScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.spotify_canvas_setup)) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateUp) {
+                    ExpressiveIconButton(onClick = onNavigateUp) {
                         Icon(
                             SfIcons.ArrowBack,
                             contentDescription = stringResource(R.string.back),
@@ -98,15 +99,17 @@ fun SpotifyCanvasAuthScreen(
                 onValueChange = { tokenInput = it },
                 label = { Text(stringResource(R.string.spdc_token)) },
                 modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
-                singleLine = true
+                singleLine = true,
+                shape = MaterialTheme.shapes.large,
             )
 
-            Button(
-                onClick = { 
+            ExpressiveButton(
+                onClick = {
                     AppSettings.setSpotifySpdcToken(tokenInput.trim())
                     onNavigateUp()
                 },
-                modifier = Modifier.fillMaxWidth()
+                size = ExpressiveButtonSize.M,
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(R.string.save))
             }

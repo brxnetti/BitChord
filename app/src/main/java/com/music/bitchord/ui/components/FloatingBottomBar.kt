@@ -56,6 +56,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.ui.haptics.Haptic
 import com.music.bitchord.ui.haptics.rememberHaptics
+import com.music.bitchord.ui.theme.expressivePress
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
@@ -239,6 +240,12 @@ fun FloatingBottomBar(
         0f
     }
 
+    // Expressive (branch material3-expressive): the indicator morphs from a
+    // full pill at rest to a 12dp squircle while it travels, on the same lag
+    // that stretches it — the shape changes because it is moving, not just
+    // because it landed somewhere new.
+    val indicatorRadius = with(density) { (rowSize.height / 2f).toDp() } * (1f - lag) + 12.dp * lag
+
     var lastHapticTab by remember { mutableIntStateOf(selectedIndex) }
 
     LaunchedEffect(selectedIndex) {
@@ -283,7 +290,7 @@ fun FloatingBottomBar(
                         scaleX = 1f + lag * STRETCH
                         scaleY = 1f - lag * STRETCH * SQUASH
                     }
-                    .clip(pillShape)
+                    .clip(RoundedCornerShape(indicatorRadius))
                     // Expressive (branch material3-expressive): the selected
                     // tab sits on a solid tonal pill, not a 14% wash.
                     .background(MaterialTheme.colorScheme.primaryContainer),
@@ -378,6 +385,9 @@ private fun BottomBarItem(
         animationSpec = glassSpec,
         label = "tabScale",
     )
+    // Expressive (branch material3-expressive): the tab answers a press with
+    // the 0.97 spring scale, on the same source the click fires from.
+    val pressSource = remember { MutableInteractionSource() }
     val haptics = rememberHaptics()
     val tint by animateColorAsState(
         targetValue = if (selected) {
@@ -392,9 +402,10 @@ private fun BottomBarItem(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
+            .expressivePress(pressSource)
             .clip(RoundedCornerShape(percent = 50))
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = pressSource,
                 indication = null,
             ) {
                 if (!selected) haptics.play(Haptic.Select)

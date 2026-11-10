@@ -34,7 +34,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -64,6 +63,7 @@ import com.music.bitchord.ui.haptics.rememberHaptics
 import com.music.bitchord.playback.MusicOnlyPlayback
 import com.music.bitchord.ui.player.PlayerDock
 import com.music.bitchord.ui.theme.ExpressiveFilledIconButton
+import com.music.bitchord.ui.theme.ExpressiveIconButton
 import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
 import com.music.bitchord.ui.player.AndroidMusicVideo
 import androidx.compose.animation.core.animateDpAsState
@@ -472,7 +472,7 @@ private fun GlassNowPlaying(
             if (!isInline) {
                 // Glyph centres 44dp apart, as Apple's are.
                 Spacer(Modifier.width(4.dp))
-                IconButton(
+                ExpressiveIconButton(
                     onClick = {
                         haptics.play(Haptic.SkipNext)
                         onNext()

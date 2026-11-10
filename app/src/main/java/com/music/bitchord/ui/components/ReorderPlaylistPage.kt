@@ -23,11 +23,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.DragHandle
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import com.music.bitchord.ui.theme.ExpressiveButton
+import com.music.bitchord.ui.theme.ExpressiveButtonSize
+import com.music.bitchord.ui.theme.ExpressiveIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
@@ -101,7 +102,7 @@ fun ReorderPlaylistPage(
                 .padding(start = 8.dp, end = 22.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onClose) {
+            ExpressiveIconButton(onClick = onClose) {
                 Icon(
                     Icons.Rounded.Close,
                     contentDescription = stringResource(R.string.back),
@@ -123,9 +124,10 @@ fun ReorderPlaylistPage(
                 )
             }
             // The page's filled pill — white with dark text, as its Play is.
-            Button(
+            ExpressiveButton(
                 onClick = { onSave(order.toList()) },
                 enabled = changed && !saving,
+                size = ExpressiveButtonSize.M,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.White,
                     contentColor = Color.Black,
@@ -324,8 +326,8 @@ private fun ReorderRow(
             contentDescription = null,
             modifier = Modifier
                 .size(44.dp)
-                .clip(RoundedCornerShape(7.dp))
-                .thumbnailBorder(RoundedCornerShape(7.dp))
+                .clip(RoundedCornerShape(12.dp))
+                .thumbnailBorder(RoundedCornerShape(12.dp))
                 .background(palette.elevated),
         )
         Spacer(Modifier.width(16.dp))

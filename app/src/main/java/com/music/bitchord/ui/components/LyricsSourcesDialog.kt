@@ -216,6 +216,7 @@ fun LyricsSourcesDialog(
                     value = input,
                     onValueChange = { input = it },
                     singleLine = true,
+                    shape = MaterialTheme.shapes.large,
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,

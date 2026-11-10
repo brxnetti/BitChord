@@ -327,7 +327,7 @@ private fun PeriodPicker(selected: ReplayPeriod, onSelect: (ReplayPeriod) -> Uni
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .background(background)
                     .clickable { onSelect(period) }
                     .padding(horizontal = 6.dp, vertical = 8.dp),
@@ -477,7 +477,7 @@ private fun SectionTitle(text: String, dark: Boolean) {
 private fun ReplayChartRow(row: ReplayRow, circular: Boolean, dark: Boolean, onClick: () -> Unit) {
     val textColor = if (dark) Color.White else Color.Black
     val textVariant = if (dark) Color.White.copy(alpha = 0.55f) else Color.Black.copy(alpha = 0.55f)
-    val shape = if (circular) CircleShape else RoundedCornerShape(6.dp)
+    val shape = if (circular) CircleShape else RoundedCornerShape(12.dp)
     Row(
         Modifier
             .fillMaxWidth()

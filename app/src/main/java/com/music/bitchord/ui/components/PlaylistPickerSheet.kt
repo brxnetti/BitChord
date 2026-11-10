@@ -35,11 +35,12 @@ import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material.icons.rounded.RadioButtonUnchecked
-import androidx.compose.material3.Button
+import com.music.bitchord.ui.theme.ExpressiveButton
+import com.music.bitchord.ui.theme.ExpressiveButtonSize
+import com.music.bitchord.ui.theme.ExpressiveIconButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
@@ -262,7 +263,7 @@ private fun SheetTopBar(
             .padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = onLeading) {
+        ExpressiveIconButton(onClick = onLeading) {
             Icon(
                 leadingIcon,
                 contentDescription = leadingDescription,
@@ -270,7 +271,7 @@ private fun SheetTopBar(
             )
         }
         title()
-        IconButton(onClick = onConfirm, enabled = confirmEnabled) {
+        ExpressiveIconButton(onClick = onConfirm, enabled = confirmEnabled) {
             Icon(
                 SfIcons.Check,
                 contentDescription = confirmDescription,
@@ -298,8 +299,8 @@ private fun PlaylistRow(playlist: UserPlaylist, selected: Boolean, onClick: () -
             contentDescription = null,
             modifier = Modifier
                 .size(44.dp)
-                .clip(RoundedCornerShape(7.dp))
-                .thumbnailBorder(RoundedCornerShape(7.dp))
+                .clip(RoundedCornerShape(12.dp))
+                .thumbnailBorder(RoundedCornerShape(12.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant),
         )
         Spacer(Modifier.width(16.dp))
@@ -392,7 +393,7 @@ private fun NewPlaylistForm(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 22.dp, vertical = 16.dp)
-                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(11.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
                 .padding(horizontal = 12.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -499,7 +500,7 @@ internal fun RenamePlaylistForm(
                 .padding(start = 8.dp, end = 22.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBack) {
+            ExpressiveIconButton(onClick = onBack) {
                 Icon(
                     SfIcons.ArrowBack,
                     contentDescription = stringResource(R.string.back),
@@ -519,7 +520,7 @@ internal fun RenamePlaylistForm(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 22.dp, vertical = 16.dp)
-                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(11.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
                 .padding(horizontal = 12.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -538,9 +539,10 @@ internal fun RenamePlaylistForm(
                     .focusRequester(focusRequester),
             )
         }
-        Button(
+        ExpressiveButton(
             onClick = submit,
             enabled = name.isNotBlank() && name != playlist.title,
+            size = ExpressiveButtonSize.M,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 22.dp),

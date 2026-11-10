@@ -52,6 +52,9 @@ import com.music.bitchord.ui.components.IosSwitch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.ButtonDefaults
+import com.music.bitchord.ui.theme.ExpressiveButton
+import com.music.bitchord.ui.theme.ExpressiveButtonSize
 import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -894,9 +897,9 @@ private fun InAParty(
                     )
                     Text(stringResource(R.string.listen_together_host_controls), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                TextButton(onClick = { onSetCapacity(state.maxMembers - 1) }, enabled = state.maxMembers > maxOf(2, state.members.size)) { Text("−", color = MaterialTheme.colorScheme.onSurface) }
+                ExpressiveButton(onClick = { onSetCapacity(state.maxMembers - 1) }, enabled = state.maxMembers > maxOf(2, state.members.size), size = ExpressiveButtonSize.S, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) { Text("−", color = MaterialTheme.colorScheme.onSurface) }
                 Text("${state.maxMembers}", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.width(28.dp), textAlign = TextAlign.Center)
-                TextButton(onClick = { onSetCapacity(state.maxMembers + 1) }, enabled = state.maxMembers < 10) { Text("+", color = MaterialTheme.colorScheme.onSurface) }
+                ExpressiveButton(onClick = { onSetCapacity(state.maxMembers + 1) }, enabled = state.maxMembers < 10, size = ExpressiveButtonSize.S, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) { Text("+", color = MaterialTheme.colorScheme.onSurface) }
             }
             RowDivider()
             SettingsRow(
@@ -1077,7 +1080,7 @@ private fun MemberRow(member: PartyMember, isYou: Boolean, canKick: Boolean = fa
             Spacer(Modifier.width(8.dp))
             Badge(stringResource(R.string.listen_together_host))
         } else if (canKick) {
-            TextButton(onClick = onKick) { Text(stringResource(R.string.listen_together_remove)) }
+            ExpressiveButton(onClick = onKick, size = ExpressiveButtonSize.S, colors = ButtonDefaults.textButtonColors()) { Text(stringResource(R.string.listen_together_remove)) }
         }
     }
 }

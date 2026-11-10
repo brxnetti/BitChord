@@ -37,13 +37,15 @@ import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.music.bitchord.ui.theme.ExpressiveButton
+import com.music.bitchord.ui.theme.ExpressiveButtonSize
+import com.music.bitchord.ui.theme.ExpressiveCircularWavyProgress
+import com.music.bitchord.ui.theme.ExpressiveIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -417,7 +419,7 @@ private fun LocalFolderTab.label(): String = stringResource(
 
 @Composable
 private fun NewPlaylistRow(palette: ArtworkPalette, onClick: () -> Unit) {
-    val shape = RoundedCornerShape(8.dp)
+    val shape = RoundedCornerShape(12.dp)
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -735,7 +737,7 @@ private fun AlbumRow(
     onLongPress: () -> Unit,
 ) {
     val art = group.coverArt()
-    val shape = RoundedCornerShape(8.dp)
+    val shape = RoundedCornerShape(12.dp)
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -829,7 +831,7 @@ internal fun LocalFolderSelectionBar(
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = { state.selectAll(songs) }, enabled = !allSelected) {
+        ExpressiveIconButton(onClick = { state.selectAll(songs) }, enabled = !allSelected) {
             Icon(
                 Icons.Rounded.Check,
                 contentDescription = stringResource(R.string.select_all),
@@ -879,7 +881,7 @@ internal fun LocalFolderSelectionBar(
                 onClick = { delete(chosen()) },
             )
         }
-        TextButton(onClick = state::clear) { Text(stringResource(R.string.cancel)) }
+        ExpressiveButton(onClick = state::clear, size = ExpressiveButtonSize.S, colors = ButtonDefaults.textButtonColors()) { Text(stringResource(R.string.cancel)) }
     }
 }
 
@@ -897,9 +899,11 @@ private fun RowDownloadButton(song: Song, palette: ArtworkPalette, onDownload: (
     val saved by Downloads.saved.collectAsStateWithLifecycle()
     val state = active[song.videoId]
     val done = state == null && song.videoId in saved
+    // The wavy ring lays out at a fixed 48dp (its WaveSize token), so the
+    // touch target grows with it rather than the ring overflowing the row.
     Box(
         modifier = Modifier
-            .size(36.dp)
+            .size(48.dp)
             .clip(CircleShape)
             .clickable(enabled = !done) {
                 when (state) {
@@ -916,11 +920,10 @@ private fun RowDownloadButton(song: Song, palette: ArtworkPalette, onDownload: (
                 shapeSize = 18.dp,
             )
             is DownloadState.Running -> if (state.fraction > 0f) {
-                CircularProgressIndicator(
+                ExpressiveCircularWavyProgress(
                     progress = { state.fraction },
-                    modifier = Modifier.size(18.dp),
-                    strokeWidth = 2.dp,
                     color = palette.accent,
+                    trackColor = Color.Transparent,
                 )
             } else {
                 ExpressiveLoadingIndicator(
@@ -947,7 +950,12 @@ private fun RowDownloadButton(song: Song, palette: ArtworkPalette, onDownload: (
 
 @Composable
 private fun SelectionAction(icon: ImageVector, label: String, color: Color, enabled: Boolean, onClick: () -> Unit) {
-    TextButton(onClick = onClick, enabled = enabled) {
+    ExpressiveButton(
+        onClick = onClick,
+        enabled = enabled,
+        size = ExpressiveButtonSize.S,
+        colors = ButtonDefaults.textButtonColors(contentColor = color),
+    ) {
         Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(4.dp))
         Text(label, color = color)

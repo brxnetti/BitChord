@@ -31,14 +31,16 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.DownloadDone
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.music.bitchord.ui.theme.ExpressiveButton
+import com.music.bitchord.ui.theme.ExpressiveButtonSize
+import com.music.bitchord.ui.theme.ExpressiveCircularWavyProgress
+import com.music.bitchord.ui.theme.ExpressiveIconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -123,7 +125,7 @@ fun TopBarDownloadButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
             shrinkTowards = Alignment.End,
         ),
     ) {
-        IconButton(
+        ExpressiveIconButton(
             onClick = {
                 haptics.play(Haptic.Select)
                 onClick()
@@ -131,16 +133,15 @@ fun TopBarDownloadButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
         ) {
             Box(contentAlignment = Alignment.Center) {
                 if (session.busy) {
-                    CircularProgressIndicator(
+                    // The wavy ring lays out at a fixed 48dp (its WaveSize
+                    // token), which is exactly this button's touch target, so
+                    // the old 26dp ring size goes away with it.
+                    ExpressiveCircularWavyProgress(
                         // Never quite zero: a ring pinned at nothing reads as
                         // stalled where the first sliver reads as starting.
                         progress = { progress.coerceAtLeast(0.02f) },
-                        modifier = Modifier.size(RING_SIZE),
                         color = tint,
                         trackColor = tint.copy(alpha = 0.22f),
-                        strokeWidth = 2.dp,
-                        strokeCap = StrokeCap.Round,
-                        gapSize = 0.dp,
                     )
                 }
                 Icon(
@@ -236,7 +237,7 @@ fun DownloadManagerPage(
                         modifier = Modifier.weight(1f),
                     )
                     if (session.busy) {
-                        TextButton(
+                        ExpressiveButton(
                             onClick = {
                                 // Only what is still going. Cancelling a finished
                                 // row would drop it from the list, which is the
@@ -244,15 +245,19 @@ fun DownloadManagerPage(
                                 items.filterNot { it.progress.settled }
                                     .forEach { Downloads.cancel(it.videoId) }
                             },
+                            size = ExpressiveButtonSize.S,
+                            colors = ButtonDefaults.textButtonColors(),
                         ) {
                             Text(stringResource(R.string.cancel_all))
                         }
                     } else {
-                        TextButton(
+                        ExpressiveButton(
                             onClick = {
                                 DownloadSession.clear()
                                 onCleared()
                             },
+                            size = ExpressiveButtonSize.S,
+                            colors = ButtonDefaults.textButtonColors(),
                         ) {
                             Text(stringResource(R.string.clear))
                         }
@@ -315,8 +320,8 @@ private fun DownloadManagerRow(
                 contentDescription = null,
                 modifier = Modifier
                     .size(ART_SIZE)
-                    .clip(RoundedCornerShape(8.dp))
-                    .thumbnailBorder(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(12.dp))
+                    .thumbnailBorder(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant),
             )
             // A finished or failed track is stated over its own cover rather
@@ -326,7 +331,7 @@ private fun DownloadManagerRow(
                 Box(
                     modifier = Modifier
                         .size(ART_SIZE)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(12.dp))
                         .background(Color.Black.copy(alpha = 0.45f)),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -469,9 +474,6 @@ private fun DownloadSession.State.summary(): String {
         else -> pluralStringResource(R.plurals.all_songs_downloaded, finished, finished)
     }
 }
-
-/** The progress ring in the bar, sized to the account photo beside it. */
-private val RING_SIZE = 26.dp
 
 /** The glyph inside that ring, small enough to leave the stroke clear. */
 private val GLYPH_IN_RING = 15.dp

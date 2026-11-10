@@ -606,7 +606,7 @@ private fun ColumnScope.Leaderboard(
 ) {
     val context = LocalContext.current
     val lead = rows.firstOrNull() ?: return
-    val shape = if (circular) CircleShape else RoundedCornerShape(10.dp)
+    val shape = if (circular) CircleShape else RoundedCornerShape(12.dp)
     Headline(headline)
     Spacer(Modifier.height(18.dp))
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -871,7 +871,7 @@ private fun ArtworkCollage(summary: ReplaySummary, modifier: Modifier = Modifier
                 url = url,
                 fallbackText = "",
                 size = size,
-                shape = RoundedCornerShape(4.dp),
+                shape = RoundedCornerShape(12.dp),
                 px = CARD_ART_PX,
                 modifier = Modifier
                     .offset(x = w * position.first, y = h * position.second)
