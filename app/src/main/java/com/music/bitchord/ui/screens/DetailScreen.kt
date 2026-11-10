@@ -92,8 +92,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.focus.FocusRequester
@@ -187,6 +185,10 @@ import com.music.bitchord.ui.graphics.FADE_CURVE_STOPS
 import com.music.bitchord.ui.graphics.smootherStep
 import com.music.bitchord.ui.player.CanvasArtworkPlayer
 import com.music.bitchord.ui.theme.ArtworkPalette
+import com.music.bitchord.ui.theme.ExpressiveFilledIconButton
+import com.music.bitchord.ui.theme.expressiveMorphClip
+import com.music.bitchord.ui.theme.expressivePress
+import com.music.bitchord.ui.theme.expressivePressRadius
 import com.music.bitchord.ui.theme.rememberArtworkPalette
 import kotlin.math.roundToInt
 import java.util.Locale
@@ -227,7 +229,7 @@ private val RELEASE_ACTION_GAP = 14.dp
 
 /** Past this the Play pill stops growing, so a tablet doesn't get a bar. */
 private val RELEASE_ACTIONS_MAX_WIDTH = 420.dp
-private val PILL_SHAPE = RoundedCornerShape(20.dp)
+private val PILL_SHAPE = RoundedCornerShape(28.dp)
 
 /**
  * Where the search field sits once it is open — directly under the header,
@@ -259,7 +261,7 @@ private val HEADER_DROP = 44.dp
 private val ARTIST_HEADER_LIFT = 64.dp
 
 /** The artist action row: a large Play flanked by two smaller glass circles. */
-private val ARTIST_PLAY_BUTTON = 70.dp
+private val ARTIST_PLAY_BUTTON = 96.dp
 
 /** A larger share of a smaller circle than the release headers' 0.44. */
 private const val ARTIST_PLAY_ICON_SCALE = 0.56f
@@ -1193,6 +1195,12 @@ private fun ReleaseHeader(
  * Glass rather than a filled field — it is one of the header's controls that
  * happens to be typed into, and it sits close enough to the circles that a
  * Material text field beside them would read as a different app's furniture.
+ *
+ * Expressive (branch material3-expressive): 56dp tall with a 28dp shape, the
+ * same geometry as `SearchField`. It is NOT `SearchField` itself: that field
+ * submits (and clears focus) on the magnifier, has no close-on-empty and no
+ * onFocused, and wears theme colours instead of the page's artwork palette —
+ * reusing it would change the filter's behaviour, not just its look.
  */
 @Composable
 private fun DetailSearchField(
@@ -1220,7 +1228,7 @@ private fun DetailSearchField(
             .fillMaxWidth()
             .padding(horizontal = HEADER_GUTTER)
             .padding(bottom = 10.dp)
-            .height(46.dp)
+            .height(56.dp)
             .clip(PILL_SHAPE)
             .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.6f))
             .border(0.5.dp, Color.White.copy(alpha = 0.10f), PILL_SHAPE)
@@ -1664,7 +1672,9 @@ private fun ActionPill(
     // says so.
     val haptics = rememberHaptics()
     // Expressive (branch material3-expressive): the pill shrinks to 97% under
-    // the finger on a spring.
+    // the finger on a spring, and its corners morph from the full pill to the
+    // stock pressed corner for its size (12dp at 56dp, the same value
+    // ButtonDefaults.shapesFor(56.dp) lands on).
     val pressSource = remember { MutableInteractionSource() }
     val pressed by pressSource.collectIsPressedAsState()
     val pressScale by animateFloatAsState(
@@ -1680,7 +1690,7 @@ private fun ActionPill(
                 scaleX = pressScale
                 scaleY = pressScale
             }
-            .clip(CircleShape)
+            .expressiveMorphClip(pressSource, size)
             .then(
                 if (filled) {
                     Modifier.background(Color.White)
@@ -1719,8 +1729,15 @@ private fun ActionPill(
 }
 
 /**
- * The artist page's Play: a filled circle with the triangle punched out of it,
- * so the page shows through, as Apple's does.
+ * The artist page's Play: a filled disc with the triangle on it.
+ *
+ * Expressive (branch material3-expressive): the Apple punched-triangle disc
+ * — a circle with the triangle cut out of it through the photo — becomes an
+ * [ExpressiveFilledIconButton] at the L size (96dp), with the press scale.
+ * The container stays the page's own colour (white, or Apple's key colour)
+ * instead of primaryContainer: it sits on the artist photo, and a red disc
+ * would fight the page's palette. The triangle is a glyph now, not a hole
+ * punched through the disc — same black triangle, same size.
  */
 @Composable
 private fun PlayCircle(
@@ -1731,43 +1748,23 @@ private fun PlayCircle(
 ) {
     val haptics = rememberHaptics()
     val description = stringResource(R.string.play)
-    Box(
-        modifier = Modifier
-            .size(size)
-            .clip(CircleShape)
-            .clickable {
-                haptics.play(Haptic.Resume)
-                onClick()
-            }
-            // Offscreen so the clear below cuts the circle drawn under it,
-            // not whatever the page has behind.
-            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-            .drawWithContent {
-                drawCircle(containerColor)
-                val box = this.size.minDimension * iconScale
-                val unit = box / 24f
-                val origin = Offset((this.size.width - box) / 2f, (this.size.height - box) / 2f)
-                val triangle = androidx.compose.ui.graphics.Path().apply {
-                    moveTo(origin.x + 6.8f * unit, origin.y + 4.8f * unit)
-                    lineTo(origin.x + 19.2f * unit, origin.y + 12f * unit)
-                    lineTo(origin.x + 6.8f * unit, origin.y + 19.2f * unit)
-                    close()
-                }
-                drawPath(triangle, Color.Black, blendMode = BlendMode.Clear)
-                // The same round-joined pen the icon is drawn with.
-                drawPath(
-                    triangle,
-                    Color.Black,
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(
-                        width = 2f * unit,
-                        cap = androidx.compose.ui.graphics.StrokeCap.Round,
-                        join = androidx.compose.ui.graphics.StrokeJoin.Round,
-                    ),
-                    blendMode = BlendMode.Clear,
-                )
-            }
-            .semantics { contentDescription = description },
-    )
+    ExpressiveFilledIconButton(
+        onClick = {
+            haptics.play(Haptic.Resume)
+            onClick()
+        },
+        size = size,
+        iconSize = size * iconScale,
+        containerColor = containerColor,
+        contentColor = Color.Black,
+        contentDescription = description,
+    ) {
+        Icon(
+            imageVector = BitChordIcons.Play,
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
 }
 
 /**
@@ -2262,7 +2259,14 @@ private fun TopReleaseCard(
     /** Null hides the button. */
     onToggleSaved: (() -> Unit)?,
 ) {
-    val shape = remember { RoundedCornerShape(TOP_RELEASE_CORNER).continuous() }
+    // Expressive (branch material3-expressive): the panel answers a press
+    // with the 0.97 spring scale and its continuous corners morph 24→16dp.
+    // It does NOT become an ExpressiveShelfCard: its light veil is drawn to
+    // sit over the artist photo, and an opaque surfaceContainer panel would
+    // hide the photo behind it.
+    val pressSource = remember { MutableInteractionSource() }
+    val cornerRadius = expressivePressRadius(pressSource, TOP_RELEASE_CORNER, 16.dp)
+    val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius).continuous() }
     // Concentric with the panel: its corner less the inset the sleeve sits at.
     val coverShape = remember { RoundedCornerShape(TOP_RELEASE_CORNER - TOP_RELEASE_INSET).continuous() }
     val haptics = rememberHaptics()
@@ -2272,13 +2276,14 @@ private fun TopReleaseCard(
             .fillMaxWidth()
             .padding(horizontal = ARTIST_CONTENT_GUTTER)
             .padding(bottom = 22.dp)
+            .expressivePress(pressSource)
             // A light veil rather than the dark glass: Apple's containers read
             // slightly white against the page, and a dark panel reads as a hole.
             .clip(shape)
             .background(Color.White.copy(alpha = LIGHT_FILL_ALPHA), shape)
             .border(1.dp, Color.White.copy(alpha = TOP_RELEASE_EDGE_ALPHA), shape)
             .clip(shape)
-            .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
+            .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress, interactionSource = pressSource)
             .padding(
                 start = TOP_RELEASE_INSET,
                 top = TOP_RELEASE_INSET,
@@ -2395,9 +2400,15 @@ private fun SectionCard(
         )
         return
     }
+    // Expressive (branch material3-expressive): the press scale, on the same
+    // shared source as the long-press menu. No tonal container: the art's
+    // placeholder and the text wear the page's own artwork palette, and a
+    // surfaceContainer box would sit on the wrong colours over the photo.
+    val pressSource = remember { MutableInteractionSource() }
     Column(
         modifier = modifier
-            .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress),
+            .expressivePress(pressSource)
+            .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress, interactionSource = pressSource),
     ) {
         AsyncImage(
             model = item.thumbnailUrl.artworkAt(CARD_ART_PX),

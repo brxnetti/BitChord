@@ -3,8 +3,6 @@ package com.music.bitchord.ui.onboarding
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -15,16 +13,11 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,19 +30,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import com.music.bitchord.ui.theme.ExpressiveButton
+import com.music.bitchord.ui.theme.ExpressiveButtonSize
+import com.music.bitchord.ui.theme.ExpressiveFilledIconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -325,11 +321,15 @@ private fun NameField(value: String, onValueChange: (String) -> Unit, onDone: ()
         letterSpacing = (-0.6).sp,
         color = Color.White,
     )
+    // Expressive (branch material3-expressive): the field keeps its own
+    // shape — a stock text field would put a grey slab on the mesh — but the
+    // capsule is the 32dp shape now, written as the token rather than a
+    // CircleShape: same geometry at 64dp tall, explicit about it.
     Box(
         Modifier
             .fillMaxWidth()
             .height(64.dp)
-            .clip(CircleShape)
+            .clip(RoundedCornerShape(32.dp))
             .background(Color.White.copy(alpha = 0.14f))
             .padding(horizontal = 24.dp),
         contentAlignment = Alignment.CenterStart,
@@ -363,6 +363,12 @@ private fun NameField(value: String, onValueChange: (String) -> Unit, onDone: ()
  * A full-width capsule. Primary is white on the mesh, the way Apple Music's
  * own welcome sheet does it; secondary is the same shape in frosted white, so
  * the pair reads as a choice rather than a button and an afterthought.
+ *
+ * Expressive (branch material3-expressive): the stock button at size M
+ * (56dp) with the size-aware morphing shapes. The colours stay the page's
+ * own — white primary, frosted secondary — on the dark mesh, and the
+ * disabled state keeps the old 0.4 fade through the disabled colours rather
+ * than the stock grey.
  */
 @Composable
 private fun PillButton(
@@ -372,29 +378,25 @@ private fun PillButton(
     enabled: Boolean = true,
     leading: (@Composable () -> Unit)? = null,
 ) {
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (pressed) 0.97f else 1f, spring(stiffness = 900f), label = "pillScale")
-    val alpha by animateFloatAsState(if (enabled) 1f else 0.4f, tween(180), label = "pillAlpha")
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                this.alpha = alpha
-            }
-            .clip(CircleShape)
-            .background(if (primary) Color.White else Color.White.copy(alpha = 0.16f))
-            .clickable(
-                interactionSource = interaction,
-                indication = null,
-                enabled = enabled,
-                onClick = onClick,
-            ),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
+    ExpressiveButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        size = ExpressiveButtonSize.M,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (primary) Color.White else Color.White.copy(alpha = 0.16f),
+            contentColor = if (primary) Color.Black else Color.White,
+            disabledContainerColor = if (primary) {
+                Color.White.copy(alpha = 0.4f)
+            } else {
+                Color.White.copy(alpha = 0.16f * 0.4f)
+            },
+            disabledContentColor = if (primary) {
+                Color.Black.copy(alpha = 0.4f)
+            } else {
+                Color.White.copy(alpha = 0.4f)
+            },
+        ),
+        enabled = enabled,
     ) {
         if (leading != null) {
             leading()
@@ -405,7 +407,6 @@ private fun PillButton(
             style = MaterialTheme.typography.titleMedium,
             fontSize = 17.sp,
             fontWeight = FontWeight.W700,
-            color = if (primary) Color.Black else Color.White,
             textAlign = TextAlign.Center,
             maxLines = 1,
         )
@@ -414,20 +415,22 @@ private fun PillButton(
 
 @Composable
 private fun BackButton(onClick: () -> Unit) {
-    Box(
-        Modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.16f))
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
+    // Expressive (branch material3-expressive): a tonal filled icon button
+    // (40dp, frosted white on the mesh) with the press scale, replacing the
+    // hand-rolled frosted disc. The chevron still points left.
+    ExpressiveFilledIconButton(
+        onClick = onClick,
+        size = 40.dp,
+        iconSize = 18.dp,
+        containerColor = Color.White.copy(alpha = 0.16f),
+        contentColor = Color.White,
+        contentDescription = stringResource(R.string.onboarding_back),
     ) {
         Icon(
             imageVector = BitChordIcons.ChevronRight,
-            contentDescription = stringResource(R.string.onboarding_back),
-            tint = Color.White,
+            contentDescription = null,
             modifier = Modifier
-                .size(18.dp)
+                .fillMaxSize()
                 .graphicsLayer { scaleX = -1f },
         )
     }

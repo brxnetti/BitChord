@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import com.music.bitchord.ui.components.longPressMenuClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -90,6 +91,8 @@ import com.music.bitchord.ui.components.thumbnailBorder
 import com.music.bitchord.ui.components.trackColumnWidth
 import com.music.bitchord.ui.player.MeshGradientBackground
 import com.music.bitchord.ui.player.MeshPalette
+import com.music.bitchord.ui.theme.ExpressiveShelfCard
+import com.music.bitchord.ui.theme.expressivePress
 
 /** How far the Listen now heading and feed sit above the shared top inset. */
 private val HOME_TITLE_LIFT = 28.dp
@@ -409,10 +412,19 @@ fun CompactTrackRow(
     /** A music video: its thumbnail at 16:9 rather than squared off. */
     isVideo: Boolean = false,
 ) {
+    // Expressive (branch material3-expressive): the row answers a press with
+    // the 0.97 spring scale. The press source is shared with the long-press
+    // menu gesture, so the scale runs on the same press that opens the menu.
+    val pressSource = remember { MutableInteractionSource() }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
+            .expressivePress(pressSource)
+            .longPressMenuClickable(
+                onClick = onClick,
+                onLongClick = onLongPress,
+                interactionSource = pressSource,
+            )
             .contextClick(onLongPress)
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -787,44 +799,54 @@ fun VideoShelfCard(
     subtitleColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     placeholderColor: Color = MaterialTheme.colorScheme.surfaceContainer,
 ) {
-    Column(
-        modifier = modifier
-            .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
-            .contextClick(onLongPress),
+    // Expressive (branch material3-expressive): the shelf card is a tonal
+    // container now — art full-bleed on top, caption padded below it — with
+    // the corner morph and the press scale on the whole card.
+    ExpressiveShelfCard(
+        onClick = onClick,
+        onLongPress = onLongPress,
+        modifier = modifier,
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(VIDEO_ASPECT)
-                .clip(RoundedCornerShape(20.dp))
-                .thumbnailBorder(RoundedCornerShape(20.dp))
-                .background(placeholderColor),
-        ) {
-            AsyncImage(
-                // Video stills are not resizable googleusercontent art; the
-                // largest the row listed is already about card size.
-                model = item.thumbnailUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-            if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(VIDEO_ASPECT)
+                    .clip(RoundedCornerShape(20.dp))
+                    .thumbnailBorder(RoundedCornerShape(20.dp))
+                    .background(placeholderColor),
+            ) {
+                AsyncImage(
+                    // Video stills are not resizable googleusercontent art; the
+                    // largest the row listed is already about card size.
+                    model = item.thumbnailUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+                if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
+            }
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 12.dp),
+            ) {
+                Text(
+                    text = item.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = titleColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = localizeCardSubtitle(item.subtitle),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = subtitleColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
-        Spacer(Modifier.height(10.dp))
-        Text(
-            text = item.title,
-            style = MaterialTheme.typography.titleMedium,
-            color = titleColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            text = localizeCardSubtitle(item.subtitle),
-            style = MaterialTheme.typography.bodyMedium,
-            color = subtitleColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
     }
 }
 
@@ -849,50 +871,61 @@ internal fun NewShelfCard(
     /** A full-colour mark drawn in place of [icon], for a card that stands for a brand. */
     logo: DrawableResource? = null,
 ) {
-    Column(
-        modifier = modifier.clickable(onClick = onClick),
+    // Expressive (branch material3-expressive): same tonal container as the
+    // other shelf cards; the dashed "new" tile's art is a surfaceContainer
+    // box already, so the container shows only as its padded caption.
+    ExpressiveShelfCard(
+        onClick = onClick,
+        modifier = modifier,
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f)
-                .clip(RoundedCornerShape(20.dp))
-                .background(MaterialTheme.colorScheme.surfaceContainer),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (logo != null) {
-                // The mark is a disc with the bars cut out, so tinting it
-                // leaves the bars clear: white on dark, black on light.
-                Icon(
-                    painter = painterResource(logo),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.size(44.dp),
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (logo != null) {
+                    // The mark is a disc with the bars cut out, so tinting it
+                    // leaves the bars clear: white on dark, black on light.
+                    Icon(
+                        painter = painterResource(logo),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.size(44.dp),
+                    )
+                } else {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(34.dp),
+                    )
+                }
+            }
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 12.dp),
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
-            } else {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(34.dp),
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
-        Spacer(Modifier.height(10.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
     }
 }
 
@@ -938,12 +971,17 @@ internal fun ShelfCard(
     isCurrent: Boolean = false,
     isPlaying: Boolean = false,
 ) {
-    Column(
-        modifier = modifier
-            .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
-            .contextClick(onLongPress),
+    // Expressive (branch material3-expressive): the shelf card is a tonal
+    // container now — art full-bleed on top, caption padded below it — with
+    // the corner morph and the press scale on the whole card. The art keeps
+    // its own 20dp corners on the same surfaceContainer, so no seam shows.
+    ExpressiveShelfCard(
+        onClick = onClick,
+        onLongPress = onLongPress,
+        modifier = modifier,
     ) {
-        when (item.browseId) {
+        Column {
+            when (item.browseId) {
             "local:downloads" -> {
                 val palette = remember { MeshPalette(listOf(Color(0xFF1E3C72), Color(0xFF2A5298))) }
                 Box(
@@ -1006,36 +1044,42 @@ internal fun ShelfCard(
                 }
             }
         }
-        Spacer(Modifier.height(10.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 12.dp),
         ) {
-            if (isPinned) {
-                Icon(
-                    imageVector = BitChordIcons.Pin,
-                    contentDescription = stringResource(Res.string.pinned),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(14.dp),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (isPinned) {
+                    Icon(
+                        imageVector = BitChordIcons.Pin,
+                        contentDescription = stringResource(Res.string.pinned),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Spacer(Modifier.width(4.dp))
+                }
+                Text(
+                    text = item.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
                 )
-                Spacer(Modifier.width(4.dp))
             }
+            val displaySubtitle = localizeCardSubtitle(item.subtitle)
             Text(
-                text = item.title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
+                text = displaySubtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false),
             )
         }
-        val displaySubtitle = localizeCardSubtitle(item.subtitle)
-        Text(
-            text = displaySubtitle,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+    }
     }
 }

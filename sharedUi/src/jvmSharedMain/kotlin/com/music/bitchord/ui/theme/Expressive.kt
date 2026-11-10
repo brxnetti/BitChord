@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -62,6 +63,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.music.bitchord.ui.components.contextClick
+import com.music.bitchord.ui.components.longPressMenuClickable
 
 /*
  * Material 3 Expressive components (branch material3-expressive, ALPHA por
@@ -659,4 +662,71 @@ fun ExpressiveCircularWavyProgress(
 @Composable
 fun ExpressiveButtonLabel(text: String) {
     Text(text = text, style = MaterialTheme.typography.labelLarge)
+}
+
+/**
+ * The animated corner radius for a pressable card: [restRadius] at rest,
+ * [pressedRadius] while held, on the press spring. The stock morph has no
+ * public shape-animation API in either material3 version
+ * (`shapeByInteraction` is internal), so cards that morph animate the
+ * radius in Dp — the same numbers the stock morph would land on. The
+ * companion to [expressiveMorphClip], which is the disc version of the same
+ * idea (rest is a circle there; here both ends are explicit radii).
+ */
+@Composable
+fun expressivePressRadius(
+    interactionSource: MutableInteractionSource,
+    restRadius: Dp,
+    pressedRadius: Dp,
+): Dp {
+    val pressed by interactionSource.collectIsPressedAsState()
+    val radius by animateDpAsState(
+        targetValue = if (pressed) pressedRadius else restRadius,
+        animationSpec = ExpressiveMotion.press(),
+        label = "expressivePressRadius",
+    )
+    return radius
+}
+
+/**
+ * An Expressive shelf card: the media card the Home, Search, Library,
+ * Explore, Top Picks and Detail shelves are built from — a tonal container
+ * ([MaterialTheme.colorScheme.surfaceContainer]) with 24dp corners that
+ * morph one step tighter (12dp) under the finger, plus the 0.97 spring
+ * press scale. The card owns the tap and the long-press menu: the press
+ * source is shared with [longPressMenuClickable] so the scale and the
+ * morph run on the same press that fires the menu, and the ripple stays
+ * (the helper is only given the source, not a different indication).
+ *
+ * The art inside stays full-bleed at the top — its own 20dp corners sit on
+ * the same surfaceContainer as the container, so no seam shows — and the
+ * caption sits padded below it, like a real M3 media card. When the art
+ * covers the whole card (Top Picks, mood cards) the container never shows
+ * and only the morph and the scale do the work.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun ExpressiveShelfCard(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    onLongPress: (() -> Unit)? = null,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
+    content: @Composable () -> Unit,
+) {
+    val pressSource = remember { MutableInteractionSource() }
+    val radius = expressivePressRadius(pressSource, 24.dp, 12.dp)
+    Card(
+        modifier = modifier
+            .expressivePress(pressSource)
+            .longPressMenuClickable(
+                onClick = onClick,
+                onLongClick = onLongPress,
+                interactionSource = pressSource,
+            )
+            .contextClick(onLongPress),
+        shape = RoundedCornerShape(radius),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        content = { Box { content() } },
+    )
 }

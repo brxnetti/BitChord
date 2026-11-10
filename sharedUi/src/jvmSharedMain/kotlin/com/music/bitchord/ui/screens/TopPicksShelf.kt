@@ -109,9 +109,8 @@ import com.music.bitchord.ui.components.rememberBlurredBackdrop
 import com.music.bitchord.ui.components.ShelfRow
 import com.music.bitchord.ui.components.SectionHeaderSkeleton
 import com.music.bitchord.ui.components.ShimmerBox
-import com.music.bitchord.ui.components.contextClick
-import com.music.bitchord.ui.components.longPressMenuClickable
 import com.music.bitchord.ui.components.thumbnailBorder
+import com.music.bitchord.ui.theme.ExpressiveShelfCard
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.PI
@@ -279,15 +278,16 @@ private fun TopPickCard(
 ) {
     val text = cardText(pick, listenerName)
     val longPress = onLongPress?.let { { it(pick) } }
-    Box(
-        modifier = modifier
-            .aspectRatio(TOP_PICK_RATIO)
-            .clip(TopPickShape)
-            .thumbnailBorder(TopPickShape)
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .longPressMenuClickable(onClick = { onClick(pick, text.title) }, onLongClick = longPress)
-            .contextClick(longPress),
+    // Expressive (branch material3-expressive): the art covers the whole
+    // card, so the tonal container never shows — the wrapper's work here is
+    // the corner morph (24→12dp) and the press scale on the whole card. The
+    // hairline border goes: a container card needs none.
+    ExpressiveShelfCard(
+        onClick = { onClick(pick, text.title) },
+        onLongPress = longPress,
+        modifier = modifier.aspectRatio(TOP_PICK_RATIO),
     ) {
+        Box(Modifier.fillMaxSize()) {
         val eyebrowColor: Color
         val branded: Boolean
         when (pick.kind) {
@@ -365,6 +365,7 @@ private fun TopPickCard(
             )
         }
         CardCaption(text, eyebrowColor, Modifier.align(Alignment.BottomStart))
+    }
     }
 }
 

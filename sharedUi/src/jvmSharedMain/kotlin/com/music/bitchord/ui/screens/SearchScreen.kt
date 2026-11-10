@@ -50,8 +50,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import com.music.bitchord.ui.theme.ExpressiveButton
+import com.music.bitchord.ui.theme.ExpressiveButtonSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -563,16 +564,22 @@ private fun TopResultCard(
         }
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedButton(
+            // Expressive (branch material3-expressive): the stock outlined
+            // button under the theme already morphs, but only through the
+            // size-aware shapes — the wrapper pins size S (40dp) with
+            // shapesFor(40.dp) and the press scale.
+            ExpressiveButton(
                 onClick = onPlay,
+                size = ExpressiveButtonSize.S,
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
             ) {
                 Icon(Icons.Rounded.PlayArrow, contentDescription = null)
                 Spacer(Modifier.width(6.dp))
                 Text(stringResource(Res.string.play))
             }
-            OutlinedButton(
+            ExpressiveButton(
                 onClick = onPlaylist,
+                size = ExpressiveButtonSize.S,
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
             ) {
                 Icon(Icons.AutoMirrored.Rounded.PlaylistAdd, contentDescription = null)

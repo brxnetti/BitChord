@@ -3,7 +3,6 @@ package com.music.bitchord.ui.screens
 import com.music.bitchord.sharedui.resources.*
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -28,7 +27,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -49,6 +47,7 @@ import com.music.bitchord.data.model.MoodGenreSection
 import com.music.bitchord.data.model.ShelfItem
 import com.music.bitchord.data.model.UiState
 import com.music.bitchord.ui.components.MessageState
+import com.music.bitchord.ui.theme.ExpressiveShelfCard
 import com.music.bitchord.ui.components.PAGE_GUTTER
 import com.music.bitchord.ui.components.PullToRefresh
 import com.music.bitchord.ui.components.ShimmerBox
@@ -150,13 +149,17 @@ private fun MoodGenreCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    MoodGenreSleeve(
-        item = item,
-        modifier = modifier
-            .aspectRatio(MOOD_CARD_ASPECT)
-            .clip(MOOD_CARD_SHAPE)
-            .clickable(onClick = onClick),
-    )
+    // Expressive (branch material3-expressive): the sleeve covers the whole
+    // card, so the tonal container never shows — the wrapper's work here is
+    // the corner morph and the press scale. The sleeve itself is untouched:
+    // the TV app wraps it in its own focus treatment. (The card's rest
+    // radius is 24dp, the shelf standard, where the sleeve used 28dp.)
+    ExpressiveShelfCard(
+        onClick = onClick,
+        modifier = modifier.aspectRatio(MOOD_CARD_ASPECT),
+    ) {
+        MoodGenreSleeve(item = item, modifier = Modifier.fillMaxSize())
+    }
 }
 
 /**
