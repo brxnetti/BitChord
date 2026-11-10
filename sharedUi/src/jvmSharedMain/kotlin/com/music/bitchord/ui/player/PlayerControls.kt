@@ -25,6 +25,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -69,6 +70,9 @@ import androidx.compose.material.icons.rounded.Tv
 import androidx.compose.material.icons.rounded.Watch
 import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
 import com.music.bitchord.ui.theme.ExpressiveMotion
+import com.music.bitchord.ui.theme.ExpressiveTransportButton
+import com.music.bitchord.ui.theme.expressiveMorphClip
+import com.music.bitchord.ui.theme.expressivePress
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -227,6 +231,10 @@ internal fun PlayerScrubber(
     // One clock for the bar and the "Mixing" label, so they breathe on the same beat.
     val mixPulse = rememberMixPulse({ mixBlend.value }, enabled = !reduceAnimation)
     Column(Modifier.fillMaxWidth()) {
+        // Expressive (branch material3-expressive): the played part rides the
+        // expressive primary — the scrubber keeps its own Canvas (a Material
+        // Slider always draws a thumb and a tall track), only its colour
+        // changes. The unplayed track stays white over artwork.
         ThinSlider(
             value = shown,
             onValueChange = onScrub,
@@ -235,6 +243,7 @@ internal fun PlayerScrubber(
             mixing = mixing,
             mixPulse = mixPulse,
             transitionWindow = transitionWindow,
+            activeColor = MaterialTheme.colorScheme.primary,
         )
         Box(
             modifier = Modifier
@@ -558,12 +567,16 @@ internal fun VolumeRow(
             modifier = Modifier.size(20.dp).vibrantChrome(chrome),
         )
         Spacer(Modifier.width(10.dp))
+        // Expressive (branch material3-expressive): same treatment as the
+        // scrubber — the played part rides the expressive primary, Canvas
+        // unchanged.
         ThinSlider(
             value = value(),
             onValueChange = onValueChange,
             onValueChangeFinished = onValueChangeFinished,
             idleHeight = 6.dp,
             activeHeight = 10.dp,
+            activeColor = MaterialTheme.colorScheme.primary,
             modifier = Modifier.weight(1f),
         )
         Spacer(Modifier.width(10.dp))
@@ -746,6 +759,7 @@ internal fun CircleGlyph(
     modifier: Modifier = Modifier,
 ) {
     val haptics = rememberHaptics()
+    val pressSource = remember { MutableInteractionSource() }
     val discAlpha by animateFloatAsState(
         targetValue = if (active) 0.34f else 0.18f,
         label = "glyphDisc",
@@ -754,9 +768,13 @@ internal fun CircleGlyph(
     Box(
         modifier = modifier
             .size(34.dp)
-            .clip(CircleShape)
+            // Expressive (branch material3-expressive): the disc morphs
+            // circle -> squircle on press and shrinks 0.97 on the press
+            // spring — the morph the stock Button gets for free.
+            .expressiveMorphClip(pressSource, 34.dp)
+            .expressivePress(pressSource)
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = pressSource,
                 indication = null,
             ) {
                 haptics.play(haptic)
@@ -817,22 +835,25 @@ private fun TransportGlyph(
         targetValue = if (enabled) 1f else 0.3f,
         label = "transportAlpha",
     )
-    Box(
-        modifier = Modifier
-            .size(touchSize)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                enabled = enabled,
-            ) {
-                haptics.play(haptic)
-                onClick()
-            },
-        contentAlignment = Alignment.Center,
+    // Expressive (branch material3-expressive): the glyph sits bare over
+    // artwork at rest, and a tonal primaryContainer disc morphs in behind it
+    // while pressed, with the 0.97 press spring. The glyph itself is never
+    // clipped — clipping the icon itself shaves the corners off wide glyphs
+    // like fast-forward and the queue list.
+    ExpressiveTransportButton(
+        onClick = {
+            haptics.play(haptic)
+            onClick()
+        },
+        size = size,
+        touchSize = touchSize,
+        enabled = enabled,
+        pressDiscColor = MaterialTheme.colorScheme.primaryContainer,
+        contentDescription = contentDescription,
     ) {
         Icon(
             painter = painterResource(icon),
-            contentDescription = contentDescription,
+            contentDescription = null,
             tint = Color.White.copy(alpha = alpha),
             modifier = Modifier
                 .size(size)
@@ -1091,6 +1112,14 @@ private fun PillSegment(
         animationSpec = ExpressiveMotion.press(),
         label = "pillSegmentGrow",
     )
+    // The segment's highlight morphs with the press too: capsule ends at
+    // rest, the stock 12dp pressed corner of a 56dp button
+    // (ButtonDefaults.shapesFor(56.dp)) while held.
+    val morphRadius by animateDpAsState(
+        targetValue = if (pressed) 12.dp else BOTTOM_ACTION_SIZE / 2,
+        animationSpec = ExpressiveMotion.press(),
+        label = "pillSegmentMorph",
+    )
     Box(
         modifier = Modifier
             .graphicsLayer {
@@ -1099,6 +1128,7 @@ private fun PillSegment(
             }
             .width(width)
             .height(BOTTOM_ACTION_SIZE)
+            .clip(RoundedCornerShape(morphRadius))
             // Round the highlight and both fades, not inside them — see [CircleGlyph].
             .additiveChrome(chrome && !vibrant)
             .background(if (highlighted) Color.White.copy(alpha = 0.14f) else Color.Transparent)

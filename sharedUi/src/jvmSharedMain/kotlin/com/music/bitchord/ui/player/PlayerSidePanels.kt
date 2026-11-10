@@ -1,13 +1,17 @@
 package com.music.bitchord.ui.player
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.bitchord.data.lyrics.LyricLine
 import com.music.bitchord.data.lyrics.LyricsSource
@@ -69,7 +73,14 @@ fun LyricsSidePanel(
     val haze = remember { HazeState() }
     var showLyricsProviders by remember { mutableStateOf(false) }
 
-    Box(modifier) {
+    // Expressive (branch material3-expressive): the side panel is a
+    // surfaceContainer panel with 28dp corners (shapes.extraLarge), like the
+    // player drawer.
+    Box(
+        modifier
+            .clip(RoundedCornerShape(28.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainer),
+    ) {
         Box(Modifier.fillMaxSize().hazeSource(haze)) {
             LandscapeLyricsPane(
                 hasLyrics = lyricsTranslation.displayedLyrics.isNotEmpty(),
@@ -147,15 +158,22 @@ fun QueueSidePanel(
     onClear: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    InlineQueue(
-        queue = queue,
-        currentIndex = queueIndex,
-        autoplayEnabled = autoplayEnabled,
-        controlsLocked = rememberControlsLocked(),
-        onJumpTo = onJumpTo,
-        onRemove = onRemove,
-        onMove = onMove,
-        onClear = onClear,
-        modifier = modifier,
-    )
+    // Expressive (branch material3-expressive): same panel treatment as the
+    // lyrics side panel — surfaceContainer with 28dp corners.
+    Box(
+        modifier
+            .clip(RoundedCornerShape(28.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainer),
+    ) {
+        InlineQueue(
+            queue = queue,
+            currentIndex = queueIndex,
+            autoplayEnabled = autoplayEnabled,
+            controlsLocked = rememberControlsLocked(),
+            onJumpTo = onJumpTo,
+            onRemove = onRemove,
+            onMove = onMove,
+            onClear = onClear,
+        )
+    }
 }

@@ -3,11 +3,15 @@
 package com.music.bitchord.ui.theme
 
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -27,11 +31,15 @@ import androidx.compose.material3.ButtonGroupMenuState
 import androidx.compose.material3.ButtonGroupScope
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -47,6 +55,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.contentDescription
@@ -470,6 +479,179 @@ fun ExpressiveSwitch(
             uncheckedThumbColor = MaterialTheme.colorScheme.outline,
             uncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         ),
+    )
+}
+
+/**
+ * The stock pressed corner radius for a button of [size], mirroring
+ * [ButtonDefaults.shapesFor]: rest is CornerFull (a circle, radius size/2),
+ * pressed is CornerSmall 8dp up to 48dp, CornerMedium 12dp up to 76dp,
+ * CornerLarge 16dp up to 116dp, CornerExtraLarge 28dp above that — the same
+ * buckets and values the stock tokens use (ButtonXSmall/Small/Medium/Large/
+ * XLargeTokens.PressedContainerShape, verified in 1.5.0-alpha17 and rc01).
+ *
+ * There is no public shape-animation API in either version to animate a
+ * [androidx.compose.ui.graphics.Shape] between its rest and pressed forms:
+ * `rememberAnimatedShape` / `shapeByInteraction` are internal to material3
+ * and no `animateShapeAsState` exists. So the morph below animates the corner
+ * radius in Dp instead — the same numbers the stock morph would land on.
+ */
+internal fun expressivePressedCorner(size: Dp): Dp = when {
+    size <= 36.dp -> 8.dp
+    size <= 48.dp -> 8.dp
+    size <= 76.dp -> 12.dp
+    size <= 116.dp -> 16.dp
+    else -> 28.dp
+}
+
+/**
+ * The Expressive press morph for a custom disc: its clip rounds from a full
+ * circle at rest to the stock pressed corner ([expressivePressedCorner]) while
+ * held, on the press spring. For discs that are drawn by hand (transport
+ * glyphs over artwork, lyrics toggles) where the stock Button/IconButton
+ * cannot do the morph — their containers would cover the artwork.
+ */
+@Composable
+fun Modifier.expressiveMorphClip(
+    interactionSource: MutableInteractionSource,
+    size: Dp,
+): Modifier {
+    val pressed by interactionSource.collectIsPressedAsState()
+    val radius by animateDpAsState(
+        targetValue = if (pressed) expressivePressedCorner(size) else size / 2,
+        animationSpec = ExpressiveMotion.press(),
+        label = "expressiveMorphClip",
+    )
+    return this.clip(RoundedCornerShape(radius))
+}
+
+/**
+ * An Expressive transport button: a bare glyph over artwork that answers a
+ * press with a tonal disc morphing circle -> squircle behind it, plus the
+ * 0.97 spring press scale. The play/pause hero (96dp), prev/next (53dp) and
+ * any other glyph that sits on the sleeve without a container at rest.
+ *
+ * The glyph itself is never clipped — clipping the icon shaves the corners
+ * off wide glyphs like fast-forward — only the disc morphs. With
+ * [pressDiscColor] null there is no disc at all and the morph is the scale
+ * alone, so pass a disc colour for the full effect.
+ */
+@Composable
+fun ExpressiveTransportButton(
+    onClick: () -> Unit,
+    size: Dp,
+    modifier: Modifier = Modifier,
+    touchSize: Dp = size,
+    enabled: Boolean = true,
+    /** Tonal disc shown only while pressed; null keeps the glyph bare. */
+    pressDiscColor: Color? = null,
+    contentDescription: String? = null,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val discAlpha by animateFloatAsState(
+        targetValue = if (pressed && pressDiscColor != null) 1f else 0f,
+        animationSpec = ExpressiveMotion.press(),
+        label = "expressiveTransportDisc",
+    )
+    Box(
+        modifier = modifier
+            .size(touchSize)
+            .expressivePress(interactionSource)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled,
+                onClick = onClick,
+            )
+            .semantics {
+                if (contentDescription != null) this.contentDescription = contentDescription
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        if (pressDiscColor != null && discAlpha > 0f) {
+            Box(
+                Modifier
+                    .size(size)
+                    .expressiveMorphClip(interactionSource, size)
+                    .background(pressDiscColor.copy(alpha = discAlpha)),
+            )
+        }
+        Box(
+            Modifier.size(size),
+            contentAlignment = Alignment.Center,
+        ) { content() }
+    }
+}
+
+/**
+ * An Expressive icon button: the stock [IconButton] with the theme's
+ * morphing shapes ([IconButtonDefaults.shapes)]). The plain IconButton
+ * overload without `shapes` is HIDDEN-deprecated in 1.5.0-rc01 and paints a
+ * fixed standard shape with no morph — no new call sites should use it.
+ * Note the stock 48dp minimum touch target: a smaller [modifier] still lays
+ * out at 48dp.
+ */
+@Composable
+fun ExpressiveIconButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    colors: IconButtonColors = IconButtonDefaults.iconButtonColors(),
+    contentDescription: String? = null,
+    content: @Composable () -> Unit,
+) {
+    IconButton(
+        onClick = onClick,
+        shapes = IconButtonDefaults.shapes(),
+        modifier = modifier.then(
+            if (contentDescription != null) {
+                Modifier.semantics { this.contentDescription = contentDescription }
+            } else {
+                Modifier
+            },
+        ),
+        enabled = enabled,
+        colors = colors,
+        content = content,
+    )
+}
+
+/**
+ * The Expressive determinate wavy progress, in the theme primary. The stock
+ * [LinearWavyProgressIndicator] lays out at a fixed 240dp width by design, so
+ * it does not fit a full-width bar — for those, keep the thin bar tinted with
+ * the expressive primary instead.
+ */
+@Composable
+fun ExpressiveLinearWavyProgress(
+    progress: () -> Float,
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.primary,
+    trackColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
+) {
+    LinearWavyProgressIndicator(
+        progress = progress,
+        modifier = modifier,
+        color = color,
+        trackColor = trackColor,
+    )
+}
+
+/** The circular sibling of [ExpressiveLinearWavyProgress]. */
+@Composable
+fun ExpressiveCircularWavyProgress(
+    progress: () -> Float,
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.primary,
+    trackColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
+) {
+    CircularWavyProgressIndicator(
+        progress = progress,
+        modifier = modifier,
+        color = color,
+        trackColor = trackColor,
     )
 }
 

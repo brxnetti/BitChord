@@ -61,7 +61,9 @@ import com.music.bitchord.ui.utils.containSheetGestures
 import dev.chrisbanes.haze.HazeState
 import kotlin.math.roundToInt
 
-internal val DRAWER_SHAPE = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp)
+// Expressive (branch material3-expressive): 28dp top corners —
+// MaterialTheme.shapes.extraLarge.
+internal val DRAWER_SHAPE = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
 
 /**
  * The widest the drawer itself gets, however wide the window behind it is.
@@ -212,8 +214,10 @@ fun PlayerDrawer(
                     // The ⋯ menu's frost, so the drawers and the menu read as one
                     // material over the player — its own where the player is
                     // recorded for it, else the same look through the haze.
+                    // Without blur to frost through, the plain branch is the
+                    // expressive surfaceContainer rather than a flat dark fill.
                     when {
-                        reduceDynamicBlur -> Modifier.background(MenuFrostDark)
+                        reduceDynamicBlur -> Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
                         frost != null -> with(frost) {
                             Modifier.frostPanel(DRAWER_SHAPE, MenuFrostDark.copy(alpha = MENU_FROST_ALPHA))
                         }

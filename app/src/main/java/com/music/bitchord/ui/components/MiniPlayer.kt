@@ -24,7 +24,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -498,16 +497,23 @@ fun MiniPlayer(
             Spacer(Modifier.width(TRANSPORT_GAP))
             // Faded and inert rather than removed while the host holds the
             // controls, so the bar keeps its shape — see [controlsLocked].
-            IconButton(
+            // Expressive (branch material3-expressive): the next glyph sits
+            // on the same tonal primaryContainer disc as the play button
+            // beside it, 40dp — the mini player's transport is a matched pair.
+            ExpressiveFilledIconButton(
                 onClick = {
                     haptics.play(Haptic.SkipNext)
                     onNext()
                 },
+                size = GLYPH_SLOT,
+                iconSize = 28.dp,
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 enabled = !controlsLocked,
-                modifier = Modifier.size(GLYPH_SLOT),
+                contentDescription = stringResource(R.string.widget_next),
             ) {
                 MiniPlayerNextGlyph(
-                    tint = MaterialTheme.colorScheme.onBackground
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                         .copy(alpha = if (controlsLocked) 0.3f else 1f),
                 )
             }

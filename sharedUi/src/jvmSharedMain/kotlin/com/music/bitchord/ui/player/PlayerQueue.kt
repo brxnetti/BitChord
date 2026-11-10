@@ -10,6 +10,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,9 +36,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import com.music.bitchord.ui.theme.ExpressiveButton
+import com.music.bitchord.ui.theme.ExpressiveButtonSize
+import com.music.bitchord.ui.theme.expressivePress
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -447,15 +452,23 @@ private fun QueueHeading(
 
 @Composable
 private fun QueueClearButton(style: TextStyle, locked: Boolean, onClear: () -> Unit) {
-    Text(
-        text = stringResource(Res.string.clear),
-        style = style,
-        color = Color.White.copy(alpha = if (locked) 0.25f else 0.75f),
-        modifier = Modifier
-            .clip(RoundedCornerShape(percent = 50))
-            .clickable(enabled = !locked, onClick = onClear)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-    )
+    // Expressive (branch material3-expressive): a real S button in
+    // secondaryContainer rather than a text label with a tap — the only
+    // Button in the queue.
+    ExpressiveButton(
+        onClick = onClear,
+        size = ExpressiveButtonSize.S,
+        enabled = !locked,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        ),
+    ) {
+        Text(
+            text = stringResource(Res.string.clear),
+            style = style,
+        )
+    }
 }
 
 @Composable
@@ -736,14 +749,18 @@ private fun InlineQueueRow(
     onDrag: (Float) -> Unit = {},
     onDragEnd: () -> Unit = {},
 ) {
+    // Expressive (branch material3-expressive): 12dp corners on the row and
+    // its art, and the press spring on the whole row.
+    val pressSource = remember { MutableInteractionSource() }
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .expressivePress(pressSource)
+            .clip(RoundedCornerShape(12.dp))
             .background(if (lifted) Color.White.copy(alpha = 0.06f) else Color.Transparent)
             // Disabled rather than ignored: a tap that ripples and then does
             // nothing reads as the app having missed it.
-            .clickable(enabled = !locked, onClick = onClick)
+            .clickable(interactionSource = pressSource, enabled = !locked, onClick = onClick)
             .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -777,8 +794,8 @@ private fun InlineQueueRow(
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .trackArtSize(44.dp, song.isVideo)
-                .clip(RoundedCornerShape(6.dp))
-                .thumbnailBorder(RoundedCornerShape(6.dp))
+                .clip(RoundedCornerShape(12.dp))
+                .thumbnailBorder(RoundedCornerShape(12.dp))
                 .background(Color.White.copy(alpha = 0.08f)),
         )
         Spacer(Modifier.width(12.dp))

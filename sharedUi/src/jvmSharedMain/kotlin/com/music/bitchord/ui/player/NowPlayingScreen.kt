@@ -150,6 +150,7 @@ import coil3.compose.AsyncImage
 import com.music.bitchord.ui.components.ExplicitBadge
 import com.music.bitchord.ui.components.VideoThumbnails
 import com.music.bitchord.ui.components.menuAnchor
+import com.music.bitchord.ui.theme.ExpressiveMotion
 import com.music.bitchord.ui.theme.HideStatusBar
 import com.music.bitchord.ui.theme.rememberScreenOrientation
 import com.music.bitchord.ui.theme.StatusBarIcons
@@ -1310,11 +1311,14 @@ fun NowPlayingScreen(
             lyricsControlsOpen = false
         }
     }
-    // How collapsed the sleeve is, whichever surface asked for it — one 420ms
-    // ease for the queue and the lyrics both.
+    // How collapsed the sleeve is, whichever surface asked for it.
+    // Expressive (branch material3-expressive): the sleeve morphs on the
+    // container spring — the slow, floaty spring for large containers — when
+    // the queue or the lyrics open and close, so the sleeve and the sheet
+    // breathe on the same spring rather than on a fixed 420ms ease.
     val animatedCollapse = animateFloatAsState(
         targetValue = if (lyricsOpen || queueOpen) 1f else 0f,
-        animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing),
+        animationSpec = ExpressiveMotion.container(),
         label = "sleeveCollapse",
     )
     // A queue tap/drag already owns a 420ms progress value. Reusing it avoids

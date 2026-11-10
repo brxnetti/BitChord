@@ -24,13 +24,20 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.abs
 
 /**
- * The spring every open and close runs on: critically damped, so it never
- * bounces, with about 0.45s of response — the way Apple Music's player sheet
- * moves. Unlike a timed ease it has no fast end: it leaves briskly and then
- * spends most of its time settling, slower and slower, into place, which is
- * where the eye is following the artwork home.
+ * The spring every open and close runs on: the expressive container spring
+ * ([com.music.bitchord.ui.theme.ExpressiveMotion.container]) — damping 0.9,
+ * stiffness 200 — so the sheet, the sleeve and the panels breathe on the same
+ * spring. It leaves briskly and then spends most of its time settling,
+ * slower and slower, into place, which is where the eye is following the
+ * artwork home. Unlike a timed ease it has no fast end. (Historically:
+ * critically damped, stiffness 195; aligned with the container spring in the
+ * full Material 3 Expressive migration — the 0.9 damping overshoots by
+ * ~0.15% of the travel, invisible at sheet scale.)
  */
-private const val SLIDE_STIFFNESS = 195f
+private const val SLIDE_STIFFNESS = Spring.StiffnessLow
+
+/** How damped the sheet's slide is: 0.9, the expressive container spring. */
+private const val SLIDE_DAMPING = 0.9f
 
 /** Close enough to stop, in pixels — rather than a spring's whole long tail. */
 private const val SLIDE_SETTLED_PX = 0.5f
@@ -337,12 +344,12 @@ class PlayerSheetMotion(
             targetValue = to,
             initialVelocity = velocity,
             animationSpec = spring(
-                dampingRatio = Spring.DampingRatioNoBouncy,
+                dampingRatio = SLIDE_DAMPING,
                 stiffness = SLIDE_STIFFNESS,
                 visibilityThreshold = SLIDE_SETTLED_PX,
             ),
         ) { value, _ ->
-            // Critically damped never bounces from rest, but thrown hard
+            // Damped 0.9 almost never bounces from rest, but thrown hard
             // enough at its target it can pass it once: never past open or
             // past the bar.
             held = value.coerceIn(0f, travel)

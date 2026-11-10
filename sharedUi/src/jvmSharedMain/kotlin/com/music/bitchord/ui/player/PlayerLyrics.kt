@@ -47,7 +47,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Language
@@ -56,6 +55,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import com.music.bitchord.ui.theme.ExpressiveLoadingIndicator
+import com.music.bitchord.ui.theme.expressiveMorphClip
+import com.music.bitchord.ui.theme.expressivePress
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -1474,15 +1475,21 @@ internal fun TranslationToggleButton(
         targetValue = if (active) 0.34f else 0.18f,
         label = "translateDisc",
     )
+    val pressSource = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
             .size(34.dp)
-            .clip(CircleShape)
+            // Expressive (branch material3-expressive): the disc morphs
+            // circle -> squircle on press and shrinks 0.97 on the press
+            // spring, like CircleGlyph. It stays a custom disc — the M3
+            // ToggleButton's container would cover the artwork.
+            .expressiveMorphClip(pressSource, 34.dp)
+            .expressivePress(pressSource)
             .additiveChrome(chrome)
             .background(Color.White.copy(alpha = discAlpha))
             .clickable(
                 enabled = enabled,
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = pressSource,
                 indication = null,
                 onClick = onClick,
             ),
@@ -1527,15 +1534,19 @@ internal fun RomanizationToggleButton(
         targetValue = if (active) 0.34f else 0.18f,
         label = "romanizeDisc",
     )
+    val pressSource = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
             .size(34.dp)
-            .clip(CircleShape)
+            // Expressive (branch material3-expressive): same morph as the
+            // translate disc — circle -> squircle on press, 0.97 press spring.
+            .expressiveMorphClip(pressSource, 34.dp)
+            .expressivePress(pressSource)
             .additiveChrome(chrome)
             .background(Color.White.copy(alpha = discAlpha))
             .clickable(
                 enabled = enabled,
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = pressSource,
                 indication = null,
                 onClick = onClick,
             ),
