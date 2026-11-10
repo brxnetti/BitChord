@@ -3,7 +3,6 @@
 package com.music.bitchord.ui.theme
 
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -53,7 +52,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 
 /*
@@ -319,9 +317,22 @@ fun ExpressiveChip(
 }
 
 /**
- * An Expressive slider: the M3 slider with a 28dp thumb (the Expressive
- * thumb size) that grows on press, on the primary track. [thumbSize] is the
- * public `SliderDefaults.Thumb` size knob — no alpha API needed.
+ * An Expressive slider: the M3 slider on the primary track.
+ *
+ * Why the plain value-based overload, not the SliderState one with a custom
+ * thumb/track: this module compiles against androidx material3 1.5.0-alpha17
+ * (via JetBrains material3 1.11.0-alpha07) but the phone ships 1.5.0-rc01,
+ * and rc01 REMOVED the value-based Slider overload that takes thumb/track —
+ * calling it linked a method the dex does not have (NoSuchMethodError when
+ * opening Settings). The SliderState-based overload that replaces it in
+ * rc01 does not exist in alpha17, so it cannot be called from code that
+ * must also compile against alpha17 — and this file is shared with the
+ * desktop target, which resolves the alpha17-level API too. The plain
+ * value-based overload is byte-identical in alpha17 and rc01 (same
+ * parameters, same order), so it compiles on both targets and links on the
+ * phone. Cost: the thumb is the stock M3 size instead of the 28dp
+ * Expressive one that grows on press, and the track draws its default stop
+ * indicator — the Expressive colours (primary thumb/track) are kept.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -338,15 +349,8 @@ fun ExpressiveSlider(
         activeTrackColor = MaterialTheme.colorScheme.primary,
         inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
     ),
-    thumbSize: DpSize = DpSize(28.dp, 28.dp),
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    val thumb by animateDpAsState(
-        targetValue = if (pressed) 34.dp else thumbSize.width,
-        animationSpec = ExpressiveMotion.press(),
-        label = "expressiveSliderThumb",
-    )
     Slider(
         value = value,
         onValueChange = onValueChange,
@@ -357,22 +361,6 @@ fun ExpressiveSlider(
         onValueChangeFinished = onValueChangeFinished,
         colors = colors,
         interactionSource = interactionSource,
-        thumb = {
-            SliderDefaults.Thumb(
-                interactionSource = interactionSource,
-                colors = colors,
-                enabled = enabled,
-                thumbSize = DpSize(thumb, thumb),
-            )
-        },
-        track = { sliderState ->
-            SliderDefaults.Track(
-                sliderState = sliderState,
-                colors = colors,
-                drawStopIndicator = null,
-                drawTick = { _, _ -> },
-            )
-        },
     )
 }
 
