@@ -88,6 +88,21 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
+        // Fix cierre al abrir (2026-11-09): con el plugin KMP de libreria
+        // el procesado de recursos Android esta APAGADO por defecto, asi que
+        // el plugin CMP nunca copio composeResources/ a assets/ y el APK
+        // salia sin ningun recurso Compose — OnboardingScreen moria en
+        // painterResource(Res.drawable.ic_logo) antes de dibujar nada
+        // (Missing resource .../drawable/ic_logo.xml, stack trace real del
+        // emulador AOSP). La guia de migracion de AGP ("Migrate to the
+        // Kotlin Multiplatform library plugin", seccion 4, "Enable Android
+        // resources") y la doc de Kotlin exigen este opt-in para que la
+        // libreria empaquete sus recursos: sin el, el CMP registra la tarea
+        // de copia pero AGP no le da un directorio de assets donde
+        // escribirla, y la tarea ni siquiera aparece en el build.
+        androidResources {
+            enable = true
+        }
     }
 
     jvm {
